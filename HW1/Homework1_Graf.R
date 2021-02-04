@@ -1,3 +1,10 @@
+# Ben Graf & Ricardo Cortez
+# STA 6113 - Simulation
+# Homework 1
+# Due 9 Feb 2021
+
+pacman::p_load(pacman plotly)
+
 #### 1 ####
 
 sinapprox <- function(x, n) {
@@ -184,3 +191,112 @@ fixedpoint <- function(f, starting, alpha, maxit = 1000, tol = 1e-9) {
 fixedpoint(cauchy2, -1, 1)
 fixedpoint(cauchy2, -1, 0.64)
 fixedpoint(cauchy2, -1, 0.25)
+
+
+#### 4(a) ####
+
+setwd("/Users/Ben/Library/Mobile Documents/com~apple~CloudDocs/Documents/UTSA Master's/Semester 4/STA 6133 Simulation & Statistical Computing/Homework/Homework 1/")
+readLines("oilspills.dat")
+oil <- read.table("oilspills.dat", header = TRUE)
+
+# Log-likelihood function for Poisson
+llpois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  return(sum(-term + N*log(term) - log(factorial(N))))
+}
+
+# Test llpois
+testalphas <- t(as.matrix(c(1,1)))
+testbs <- t(as.matrix(oil[1:5,3:4]))
+testN <- oil[1:5,2]
+llpois(testalphas, testbs, testN)
+
+# Gradient of log-likelihood for Poisson
+gradpois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv1 <- sum(-bs[1,] + N*bs[1,]/term)
+  drv2 <- sum(-bs[2,] + N*bs[2,]/term)
+  return(as.matrix(c(drv1,drv2)))
+}
+
+# Test gradpois
+gradpois(testalphas, testbs, testN)
+
+# Hessian of log-likelihood for Poisson
+hesspois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv11 <- sum(-N * (bs[1,])^2 / (term^2))
+  drv12 <- sum(-N * bs[1,] * bs[2,] / (term^2))
+  drv22 <- sum(-N * (bs[2,])^2 / (term^2))
+  return(matrix(c(drv11,drv12, drv12,drv22), nrow = 2, ncol = 2, byrow = TRUE))
+}
+
+# Test hesspois
+hesspois(testalphas, testbs, testN)
+
+# Newton's Method adapted for this problem
+newtonmulti <- function(grad, hess, x0, data1, data2, tol = 1e-9, max.iter = 100) {
+  ## Newton_Raphson algorithm for solving grad == 0.
+  ## x0 is the initial guess of the roots.
+  ## The algorithm terminates when the function value is within distance tol of 0,
+  ## or the number of iterations exceeds max.iter, whichever happens first.
+  
+  # initialise
+  x <- x0
+  fx <- grad(x, data1, data2)
+  iter <-  0
+  # continue iterating until stopping conditions are met
+  while (((abs(fx[1]) > tol) | (abs(fx[2]) > tol)) & (iter < max.iter)) {
+    x <- x - t(solve(hess(x,data1,data2)) %*% grad(x,data1,data2))
+    fx <- grad(x, data1, data2)
+    iter <- iter+1
+    cat("At iteration", iter, "value of x is:", x, "and f is:", fx, "\n")
+  }
+  
+  # output depends on success of algorithm
+  if ((abs(fx[1]) > tol) | (abs(fx[2]) > tol)) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(c(root = x, f.val = fx))
+  }
+}
+
+testalphas <- t(as.matrix(c(1,1)))
+bs <- t(as.matrix(oil[,3:4]))
+N <- oil[,2]
+res <- newtonmulti(gradpois, hesspois, testalphas, bs, N)
+
+llpois(res[1:2], bs, N)
+llpois(c(1,1), bs, N)
+
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.5,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.1,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.8,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(3,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(2,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(2,2))), bs, N)
+
+llpois(c(3,-2), bs, N)
+
+# Plot the log-likelihood for a variety of alphas to check that we are converging to a maximum
+# Try alphas from 0 to 10
+a1 <- a2 <- seq(from = 0, to = 10, by = 0.1)
+len <- length(a1)^2
+llik <- data.frame(alpha1 = rep_len(0,length.out = len), alpha2 = rep_len(0,length.out = len), value = rep_len(0,length.out = len))
+index <- 0
+# Plot log-likelihood
+for (i in 1:length(a1)) {
+  for (j in 1:length(a2)) {
+    index <- index + 1
+    val <- llpois(c(a1[i],a2[j]), bs, N)
+    llik[index,] <- c(a1[i], a2[j], val)
+  }
+}
+plot_ly(llik, x = ~alpha1, y = ~alpha2, z = ~value)
+max(llik$value, na.rm = TRUE)
+llik[which(llik$value == max(llik$value, na.rm = TRUE)),]
