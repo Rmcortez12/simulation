@@ -3,7 +3,7 @@
 # Homework 1
 # Due 9 Feb 2021
 
-pacman::p_load(pacman plotly)
+pacman::p_load(pacman, plotly)
 
 #### 1 ####
 
@@ -266,13 +266,12 @@ newtonmulti <- function(grad, hess, x0, data1, data2, tol = 1e-9, max.iter = 100
   }
 }
 
+# Run Newton's Method
 testalphas <- t(as.matrix(c(1,1)))
 bs <- t(as.matrix(oil[,3:4]))
 N <- oil[,2]
 res <- newtonmulti(gradpois, hesspois, testalphas, bs, N)
-
 llpois(res[1:2], bs, N)
-llpois(c(1,1), bs, N)
 
 newtonmulti(gradpois, hesspois, t(as.matrix(c(0.5,0.5))), bs, N)
 newtonmulti(gradpois, hesspois, t(as.matrix(c(0.1,0.5))), bs, N)
@@ -281,7 +280,6 @@ newtonmulti(gradpois, hesspois, t(as.matrix(c(3,0.5))), bs, N)
 newtonmulti(gradpois, hesspois, t(as.matrix(c(2,0.5))), bs, N)
 newtonmulti(gradpois, hesspois, t(as.matrix(c(2,2))), bs, N)
 
-llpois(c(3,-2), bs, N)
 
 # Plot the log-likelihood for a variety of alphas to check that we are converging to a maximum
 # Try alphas from 0 to 10
@@ -300,3 +298,51 @@ for (i in 1:length(a1)) {
 plot_ly(llik, x = ~alpha1, y = ~alpha2, z = ~value)
 max(llik$value, na.rm = TRUE)
 llik[which(llik$value == max(llik$value, na.rm = TRUE)),]
+
+
+#### 4(b) ####
+
+# Fisher Information of log-likelihood for Poisson
+ipois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv11 <- -sum((bs[1,])^2 / term)
+  drv12 <- -sum(bs[1,] * bs[2,] / term)
+  drv22 <- -sum((bs[2,])^2 / term)
+  return(matrix(c(drv11,drv12, drv12,drv22), nrow = 2, ncol = 2, byrow = TRUE))
+}
+
+# Test ipois
+ipois(testalphas, testbs, testN)
+
+# Run Newton's Method
+res2 <- newtonmulti(gradpois, ipois, testalphas, bs, N)
+llpois(res2[1:2], bs, N)
+
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.5,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.1,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.8,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(3,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(2,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(2,2))), bs, N)
+
+
+#### 4(c) ####
+
+# Run time to generate Hessian matrix
+start_time <- Sys.time()
+hesspois(testalphas, testbs, testN)
+end_time <- Sys.time()
+print(paste0("Hessian method takes ", end_time-start_time))
+
+# Run time to generate Fisher Information matrix
+start_time <- Sys.time()
+ipois(testalphas, testbs, testN)
+end_time <- Sys.time()
+print(paste0("Fisher Information method takes ", end_time-start_time))
+
+
+#### 4(d) ####
+
+sqrt(diag(solve(-hesspois(res[1:2], bs, N))))   # Estimated standard errors of MLEs is square root of diagonal of inverse Hessian matrix
+sqrt(diag(solve(-ipois(res[1:2], bs, N))))   # Estimated standard errors of MLEs is square root of diagonal of inverse Fisher Information matrix
