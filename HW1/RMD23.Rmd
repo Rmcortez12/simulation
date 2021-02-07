@@ -1,0 +1,101 @@
+---
+title: 'STA 6133: Homework 1'
+author: "Ricardo Cortez"
+date: "2/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 2. 
+
+On your computer, find a root fo the quadratic equation $ax^2+bx+c=0$ using the formula $$x = \frac{-b+\sqrt{b^2-4ac}}{2a}$$ 
+
+with the values $b = 1$ and $a = c= 10^{-n}$. Assess the accuracy of your answers for $n = 1, 5, 10$ by seeing how closely the equation is satisfied. Now think of a clever way to avoid subtractive cancellation and improve your answers.
+
+## Solution: 
+Finding a root in a non-clever way: 
+
+```{r}
+# create a quadratic function since we'll be testing several n's and potentially different b's
+quad <- function(n,b){
+  a <- 10^-n
+  c <- a
+  
+  root_num_right <- sqrt(b^2-(4*a*c))
+  #splitting the equations into separate terms to better understand the subtractive cancellation 
+  root_num <- -b +root_num_right
+  root_den <- 2*a
+  
+  quad_root = root_num/root_den
+  true_root = Re(polyroot(c(c,b,a)))[1] # only take the negative root since that's what we're dealing with
+  
+  
+  #use Re to only take the real root of the complex number, checked them all, no imag parts. 
+  
+  df <- data.frame("TrueRoot" =true_root, "QuadRoot" = quad_root)
+  
+  #calculate Relative Error
+  rel_err <- abs((true_root-quad_root)/true_root)
+  df$rel_err <- rel_err
+  cat(paste0("Relative Error for a=",a, ", b=",b,", c=",c, ", and n=",n," is ", rel_err))
+  
+  return(df)
+}
+
+df1 = quad(1,1)
+df2 = quad(5,1)
+df3 = quad(10,1)
+
+plot(c(1,5,10),c(df1$rel_err,df2$rel_err,df3$rel_err), ylab = "Relative Error", xlab = "N")
+
+```
+
+From the plot above, we can see as n increases the relative error increases to 1, which indicates that subtractive cancellation is present. A closer observation of the individual terms (not shown) indicated that the most aggressive cancellation occurred in between the square root term and the $-b$ term. A common way of handling this type of cancellation is to use known mathematical identities to eliminate the need for subtraction between those elements. In this problem we used: $$x^2-y^2 = (x-y)(x+y)$$
+
+the derivation is as follows: 
+
+For Simplicity focus only on the numerator for now, the division element can be added later. $$\sqrt{b^2-4ac} - b $$
+
+let $z=\sqrt{b^2-4ac}$ and plug in the identity: $$\frac{(z-b)(z+b)}{z+b}=\frac{z^2-b^2}{z+b}$$
+
+Plugging original values back in: $$\frac{b^2-4ac-b^2}{\sqrt{b^2-4ac}+b}$$
+Simplification results: $$\frac{-4ac}{\sqrt{b^2-4ac}+b}$$
+Adding back the original denominator: $$\frac{-4ac}{2a*(\sqrt{b^2-4ac}+b)}$$
+Simplify again and obtain the final equation: $$\frac{-2c}{(\sqrt{b^2-4ac}+b)}$$
+
+Modifying the earlier code: 
+
+```{r}
+quad_new <- function(n,b){
+  a <- 10^-n
+  c <- a
+
+  quad_root = -2*c / (sqrt(b^2 - 4*a*c) + b)
+  true_root = Re(polyroot(c(c,b,a)))[1] # only take the negative root since that's what we're dealing with
+  
+  
+  #use Re to only take the real root of the complex number, checked them all, no imag parts. 
+  
+  df <- data.frame("TrueRoot" =true_root, "QuadRoot" = quad_root)
+  
+  #calculate Relative Error
+  rel_err <- abs((true_root-quad_root)/true_root)
+  df$rel_err <- rel_err
+  cat(paste0("Relative Error for a=",a, ", b=",b,", c=",c, ", and n=",n," is ", rel_err))
+  
+  return(df)
+}
+
+df1_new <- quad_new(1,1)
+df2_new <-quad_new(5,1)
+df3_new <-quad_new(10,1)
+
+plot(c(1,5,10),c(df1_new$rel_err,df2_new$rel_err,df3_new$rel_err), ylab = "Relative Error", xlab = "N",ylim = c(0,1))
+
+```
+
+
+Using the new solution provides a better estimate of the roots when subtractive cancellation is present in the original equation, it is clear to see in the plot above that the relative error stays near 0 for all N's. 
