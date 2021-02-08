@@ -1,0 +1,611 @@
+---
+title: 'STA 6133: Homework 1'
+author: "Ricardo Cortez & Ben Graf"
+date: "Due 9 Feb 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(pacman, plotly)
+```
+
+# 1. 
+
+Consider approximating the function $sin(x)$ by its Taylor polynomial of degree $2n − 1$:
+$$p_{n}(x)=x-\frac{x^{3}}{3 !}+\frac{x^{5}}{5 !}+\cdots+(-1)^{n+1} \frac{x^{2 n-1}}{(2 n-1) !}$$
+
+## (a)
+
+Write an R function to compute $p_n(x)$ for $x ∈ \mathbb{R}$ and $n ∈ \mathbb{N}$.
+
+```{r}
+sinapprox <- function(x, n) {
+  ## sin(x) approximation using Taylor polynomial of degree 2n-1
+  taylor <- 0
+  for (i in 1:n) {
+    taylor <- taylor + (-1)^(i+1) * x^(2*i-1) / factorial(2*i-1)
+  }
+  return(taylor)
+}
+```
+
+## (b)
+
+Use your function to approximate $sin(x)$ for $x = \pi$ and $5\pi$, and $n =$ 10, 20, and 100. What lesson(s) can you draw from this example?
+
+```{r}
+sin(pi)
+sin(5*pi)
+sinapprox(pi,10)
+sinapprox(pi,20)
+sinapprox(pi,100)
+sinapprox(5*pi,10)
+sinapprox(5*pi,20)
+sinapprox(5*pi,100)
+```
+
+Because the Taylor polynomial contains numerous terms with negative signs, there is a risk of subtractive cancellation.  The true values of $sin(\pi)$ and $sin(5\pi)$ should be 0.  Even the built-in R functions do not provide exactly 0, though their results are on the order of $10^{-16}$, so very small.  We get similarly small numbers for our Taylor approximations of $sin(\pi)$, though the version with $n=10$ is not quite as small as the others.  The problems really kick in with approximating $sin(5\pi)$.  Because the numbers being subtracted are larger, we see major errors in the approximations.  For $n=10$, the approximation is roughly $-169,000$, nowhere near 0!  With $n=20$, it improves but is still around $-0.29$.  Finally, with  $n=100$, the approximation nears 0.  The big lesson here is to beware of Taylor expansions with alternating positive and negative terms!
+
+\pagebreak
+
+
+# 2. 
+
+On your computer, find a root fo the quadratic equation $ax^2+bx+c=0$ using the formula $$x = \frac{-b+\sqrt{b^2-4ac}}{2a}$$ 
+
+with the values $b = 1$ and $a = c= 10^{-n}$. Assess the accuracy of your answers for $n = 1, 5, 10$ by seeing how closely the equation is satisfied. Now think of a clever way to avoid subtractive cancellation and improve your answers.
+
+## Solution: 
+Finding a root in a non-clever way: 
+
+```{r}
+# create a quadratic function since we'll be testing several n's and potentially different b's
+quad <- function(n,b){
+  a <- 10^-n
+  c <- a
+  
+  root_num_right <- sqrt(b^2-(4*a*c))
+  #splitting the equations into separate terms to better understand the subtractive cancellation 
+  root_num <- -b +root_num_right
+  root_den <- 2*a
+  
+  quad_root <- root_num/root_den
+  true_root <- Re(polyroot(c(c,b,a)))[1] # only take the negative root since that's what we're dealing with
+  
+  
+  #use Re to only take the real root of the complex number, checked them all, no imag parts. 
+  
+  df <- data.frame("TrueRoot" =true_root, "QuadRoot" = quad_root)
+  
+  #calculate Relative Error
+  rel_err <- abs((true_root-quad_root)/true_root)
+  df$rel_err <- rel_err
+  cat(paste0("Relative Error for a=",a, ", b=",b,", c=",c, ", and n=",n," is ", rel_err))
+  
+  return(df)
+}
+
+df1 = quad(1,1)
+df2 = quad(5,1)
+df3 = quad(10,1)
+
+plot(c(1,5,10),c(df1$rel_err,df2$rel_err,df3$rel_err), ylab = "Relative Error", xlab = "N")
+
+```
+
+From the plot above, we can see as n increases the relative error increases to 1, which indicates that subtractive cancellation is present. A closer observation of the individual terms (not shown) indicated that the most aggressive cancellation occurred in between the square root term and the $-b$ term. A common way of handling this type of cancellation is to use known mathematical identities to eliminate the need for subtraction between those elements. In this problem we used: $$x^2-y^2 = (x-y)(x+y)$$
+
+The derivation is as follows: 
+
+For simplicity, focus only on the numerator for now, the denominator can be added later. $$\sqrt{b^2-4ac} - b $$
+
+Let $z=\sqrt{b^2-4ac}$ and multiply by a carefully chosen version of 1: $$\frac{(z-b)(z+b)}{z+b}=\frac{z^2-b^2}{z+b}$$
+
+Plugging original values back in: $$\frac{b^2-4ac-b^2}{\sqrt{b^2-4ac}+b}$$
+Simplifying: $$\frac{-4ac}{\sqrt{b^2-4ac}+b}$$
+Adding back the original denominator: $$\frac{-4ac}{2a*(\sqrt{b^2-4ac}+b)}$$
+Simplify again to obtain the final equation: $$\frac{-2c}{(\sqrt{b^2-4ac}+b)}$$
+
+Modifying the earlier code: 
+
+```{r}
+quad_new <- function(n,b){
+  a <- 10^-n
+  c <- a
+
+  quad_root = -2*c / (sqrt(b^2 - 4*a*c) + b)
+  true_root = Re(polyroot(c(c,b,a)))[1] # only take the negative root since that's what we're dealing with
+  
+  
+  #use Re to only take the real root of the complex number, checked them all, no imag parts. 
+  
+  df <- data.frame("TrueRoot" =true_root, "QuadRoot" = quad_root)
+  
+  #calculate Relative Error
+  rel_err <- abs((true_root-quad_root)/true_root)
+  df$rel_err <- rel_err
+  cat(paste0("Relative Error for a=",a, ", b=",b,", c=",c, ", and n=",n," is ", rel_err))
+  
+  return(df)
+}
+
+df1_new <- quad_new(1,1)
+df2_new <-quad_new(5,1)
+df3_new <-quad_new(10,1)
+
+plot(c(1,5,10),c(df1_new$rel_err,df2_new$rel_err,df3_new$rel_err), ylab = "Relative Error", xlab = "N",ylim = c(0,1))
+
+```
+
+
+Using the new solution provides a better estimate of the roots when subtractive cancellation is present in the original equation, it is clear to see in the plot above that the relative error stays near 0 for all N's. 
+
+\pagebreak
+
+
+# 3.
+ 
+ The following data are an i.i.d. sample from the $Cauchy(\theta , 1)$ distribution $(\theta ∈ \mathbb{R})$: 
+$$\begin{array}
+{rrr}
+1.77 & -0.23 & 2.76 & 3.80 & 3.47 & 56.75 \\
+-1.34 & 4.24 & -2.44 & 3.29 & 3.71 & -2.40 & \\
+4.53 & -0.07 & -1.05 & -13.87 & -2.53 & -1.75 \\
+0.27 & 43.21
+\end{array}$$
+
+
+## (a) 
+
+Plot the  log–likelihood function. Then find the MLE of $\theta$ using Newton’s method. Try all
+the following starting values: −11, −1, 0, 1.5, 4, 4.7, 7, 38. Discuss your results. Is the sample mean a good starting point?
+
+The density for $Cauchy(\theta , \sigma)$ is:
+$$
+f(x \mid \theta, \sigma)=\frac{1}{\pi \sigma} \frac{1}{1+\left(\frac{x-\theta}{\sigma}\right)^{2}}
+$$
+Because $\sigma=1$, we get:
+$$
+f(x \mid \theta, \sigma)=\frac{1}{\pi} \frac{1}{1+\left(x-\theta\right)^{2}} \quad , \quad -\infty < \theta < \infty \quad , \quad -\infty < x < \infty
+$$
+The joint density is then:
+$$
+f(\textbf{x} \mid \theta, 1)=\prod_{i=1}^{n} \frac{1}{\pi} \frac{1}{1+(x_i-\theta)^{2}}=\pi^{-n} \prod_{i=1}^{n} \frac{1}{1+(x_{i}-\theta)^{2}}
+$$
+The log-likelihood is then:
+$$
+l(\theta)=-n \ln \pi-\sum_{i=1}^{n} \ln \left(1+\left(x_{i}-\theta\right)^{2}\right)
+$$
+Its first derivative is:
+$$
+l^{\prime}(\theta)=\sum_{i=1}^{n} \frac{2\left(x_{i}-\theta\right)}{1+\left(x_{i}-\theta\right)^{2}}
+$$
+And its second derivative is:
+$$
+l^{\prime \prime}(\theta)=\sum_{i=1}^{n} \frac{\left(1+\left(x_{i}-\theta\right)^{2}\right)(-2)-2\left(x_{i}-\theta\right)\left(-2\left(x_{i}-\theta\right)\right)}{\left(1+\left(x_{i}-\theta\right)^{2}\right)^{2}}
+$$
+$$
+=\sum_{i=1}^{n} \frac{-2\left(1+\left(x_{i}-\theta\right)^{2}\right)+4\left(x_{i}-\theta\right)^{2}}{\left(1+\left(x_{i}-\theta\right)^{2}\right)^{2}}=\sum \frac{2\left(-1+\left(x_{i}-\theta\right)^{2}\right)}{\left(1+\left(x_{i}-\theta\right)^{2}\right)^{2}}
+$$
+The corresponding R functions are:
+```{r}
+#Import the data 
+data <- c(1.77, -0.23, 2.76, 3.80, 3.47, 56.75, -1.34, 4.24, -2.44, 3.29,
+          3.71, -2.40, 4.53, -0.07, -1.05, -13.87, -2.53, -1.75, 0.27, 43.21)
+
+n <- length(data)
+
+#log likelihood cauchy function
+log_cauchy <- function(theta){
+  return(-n*log(pi)-sum(log(1+(data-theta)^2)))
+}
+#first derivative of the log-likelihood
+log_cauchy_prime <- function(theta){
+return(sum(2*(data-theta)/(1+(data-theta)^2)))
+}
+
+#second derivative of the log-likelihood
+log_cauchy_2prime <- function(theta){
+  return(sum(2*(-1+(data-theta)^2) / (1+(data-theta)^2)^2))
+}
+
+#function for log-cauchy and log-cauchy prime
+cauchy <- function(theta){
+  return(c(log_cauchy(theta),
+           log_cauchy_prime(theta)))
+}
+#function for log-cauchy prime and 2nd prime of log-cauchy 
+cauchy_primes <- function(theta){
+  return(c(log_cauchy_prime(theta),log_cauchy_2prime(theta)))
+}
+
+theta_list <- seq(-50,50,.1)
+values <- sapply(theta_list, cauchy)
+
+log_cauchy_values <- values[1,]
+log_cauchy_prime_values <- values[2,]
+
+plot(theta_list,log_cauchy_values, type = "l", main = "Log Cauchy Distribution",xlab = "Theta", ylab = "log-likelihood")
+plot(theta_list,log_cauchy_prime_values, type = "l", main = "Log Prime Cauchy Distribution", xlab = "Theta", ylab = "prime-log-likelihood")
+abline(h = 0, col = "red")
+
+
+# Newton's Method function provided by Dr. DeOliveira
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+  ## Newton_Raphson algorithm for solving ftn(x)[1] == 0
+  ## It is assumed that ftn is a function of a single variable that returns
+  ## the function value and its first derivative as a vector of length 2.
+  ## x0 is the initial guess of the root.
+  ## The algorithm terminates when the function value is within distance tol of 0,
+  ## or the number of iterations exceeds max.iter, whichever happens first
+  # initialise
+  x <- x0
+  fx <- ftn(x)
+  iter <-  0
+  # continue iterating until stopping conditions are met
+  while ((abs(fx[1]) > tol) & (iter < max.iter)) {
+    x <- x - fx[1]/fx[2]
+    fx <- ftn(x)
+    iter <- iter+1
+    #cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+  # output depends on success of algorithm
+  if (abs(fx[1]) > tol) {
+    #cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    #cat("Algorithm converged\n")
+    return(c(root = x, f.val = fx[1]))
+  }
+}
+```
+We test using the recommended starting values:
+```{r}
+mle_values <- roots <- test_values <- c(-11,-1,0,1.5,4,4.7,7,38, mean(data))
+
+for(i in 0:length(test_values)){
+  root <- newtonraphson(cauchy_primes,test_values[i])[1]
+  roots[i] <- root
+  mle_values[i] <- log_cauchy(root)
+}
+roots
+
+ ### max value is at -1
+cat(paste0("The maximum log-likelihood value of ", test_values[which.max(mle_values)], " occurs when theta = ", roots[which.max(mle_values)]))
+```
+
+$\boldsymbol{\hat{\theta}_{MLE} = -0.1923}$. 
+
+Utilizing different starting points resulted in getting several different root values, which, given the execution pattern of the Newton-Raphson algorithm and the log-prime Cauchy distribution plot above, would be expected. Using the sample mean for a Cauchy distribution is not advantageous because the Cauchy distribution does not have a population mean. In fact, the sample mean as a starting point does *not* lead to the MLE.
+
+
+## (b) 
+
+Apply the bisection method with bracketing interval [−1, 1]. Comment on the result.
+Now run the bisection method with another bracketing interval that makes the algoritm
+converge to the ‘wrong root’, i.e., to a local maximum.
+
+```{r}
+
+# Bisection Method function provided by Dr. DeOliveira
+bisection <- function(f, x1, x2, maxit = 1000, tol = 1e-7, stop.fval = TRUE) {
+  # it uses absolute error as stopping criterion when stop.fval = FALSE
+  f1 <- f(x1)
+  if (abs(f1) < tol)
+    return(x1)
+  f2 <- f(x2)
+  if (abs(f2) < tol)
+    return(x2)
+  if (f1 * f2 > 0)
+    stop("f has equal sign at endpoints of initial interval")
+  if (f1 > 0) { # swap x1 and x2
+    tmp <- x1 ; x1 <- x2 ; x2 <- tmp 
+  }
+  n <- 0 # counter
+  x <- x1
+  repeat {
+    n <- n + 1
+    x.mid <- (x1 + x2) / 2
+    f.mid <- f(x.mid)
+    if(stop.fval == TRUE) {
+      if(abs(f.mid) < tol | n == maxit)
+        break }
+    else if(abs(x.mid - x) < tol | n == maxit)
+      break
+    if(f.mid<0){ x1 <- x.mid ; x <- x1}
+    else { x2 <- x.mid ; x <- x2 }
+  }
+  return(list(root = x.mid, f = f.mid, iter = n))
+}
+
+bisection(log_cauchy_prime, -1, 1, tol = 1e-9)
+```
+
+The Bisection took 31 iterations to converge with the given interval.  The Newton-Raphson at worst took about the same number of iterations but often took fewer than 10 iterations. Below we see a poor choice of bracketing inveral results in converging to a local maximum. 
+
+```{r}
+bisection(log_cauchy_prime, 1, 2, tol = 1e-9)   #This bracket converges to a local maximum, not the global
+
+```
+
+
+## (c)
+
+Apply a fixed–point iteration with starting value −1 and scaling choices $\alpha =$ 1, 0.64, 0.25.
+Discuss your results.
+
+```{r}
+
+fixedpoint <- function(f, starting, alpha, maxit = 1000, tol = 1e-9) {
+  # g(x) = x + alpha * f(x)
+  x <- starting
+  fx <- f(starting)
+  iter <- 0
+  while ((abs(fx) > tol) & (iter < maxit))  {
+    x <- x + alpha*fx
+    fx <- f(x)
+    iter <- iter + 1
+    #cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+  if (abs(fx) > tol) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(list(root = x, f.val = fx, iter = iter))
+  }
+}
+
+fixedpoint(log_cauchy_prime, -1, 1)
+fixedpoint(log_cauchy_prime, -1, 0.64)
+fixedpoint(log_cauchy_prime, -1, 0.25)
+fixedpoint(log_cauchy_prime, -1, 0.2)
+
+```
+
+For an $\alpha$ of 1, the fixed-point algorithm failed to converge.  Reducing $\alpha$ to 0.64 does achieve convergence, but it takes 700 iterations.  Further reducing $\alpha$ to 0.25 takes a mere 16 iterations!  Reducing $\alpha$ any lower with the same starting point begins increasing the number of iterations again. 
+
+\pagebreak
+
+
+# 4.
+
+There were 46 crude oil spills of at least 1000 barrels from tankers in U.S. waters during 1974–1999. The web page http://www.stat.colostate.edu/computationalstatistics/ contains the following data:  
+$N_i =$ number of spills in year $i$;  
+$b_{i1} =$ amount of oil shipped through U.S. waters from import/export shipments in year $i$ (in billions of barrels [Bbbl]);  
+$b_{i2} =$ amount of oil shipped through U.S. waters U.S. from domestic shipments in year $i$.  
+Suppose we use the Poisson process model that assumes $N_i | b_{i1}, b_{i2} ∼ Poisson(\alpha_1b_{i1} + \alpha_2b_{i2})$. The volume of oil shipped is a measure of spill risk, so $\alpha_1$ and $\alpha_2$ represent the rates of spill occurrences per Bbbl during import/export and domestic shipments, respectively.
+
+## (a)
+
+Derive Newton’s iterative algorithm for finding the MLE of $\boldsymbol{\alpha} = (\alpha_1, \alpha_2)$, and write an R function to implement this algorithm. Then run this iterative algorithm to compute the MLE of $\boldsymbol{\alpha}$ based on the above dataset.
+
+The joint density of $\textbf{N}$ is: 
+$$
+f(\textbf{N} \mid \boldsymbol{\alpha})=\prod_{i=1}^{n} e^{-\left(\alpha_1 b_{i1}+\alpha_{2} b_{i2}\right)} \frac{\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)^{N_{i}}}{N_{i} !}
+$$
+The log-likelihood of $\boldsymbol{\alpha}$ is therefore:
+$$
+l(\boldsymbol{\alpha}) = \sum_{i=1}^{n} \bigl( -\left(a_{i} b_{i1} + \alpha_{2} b_{i 2}\right) + N_i \ln (\alpha_{1} b_{i1} + \alpha_{2} b_{i2}) - \ln N_{i}! \bigr)
+$$
+Its first derivatives are:
+$$
+\frac{\partial l}{\partial \alpha_{1}}=\sum_{i=1}^{n}\left(-b_{i1}+N_{i} \frac{b_{i1}}{\alpha_{1} b_{i 1}+\alpha_{2} b_{i 2}}\right)
+$$
+$$
+\frac{\partial l}{\partial \alpha_{2}}=\sum_{i=1}^{n}\left(-b_{i2}+N_{i} \frac{b_{i2}}{\alpha_{1} b_{i 1}+\alpha_{2} b_{i 2}}\right)
+$$
+The gradient is defined as:
+$$
+\nabla l(\boldsymbol{\alpha})=\left(\begin{array}{l}
+\frac{\partial l}{\partial \alpha_{1}} \\
+\frac{\partial l}{\partial \alpha_{2}}
+\end{array}\right)
+$$
+The second derivatives are:
+$$
+\frac{\partial^{2} l}{\partial \alpha_{1}^2} =\sum_{i=1}^{n} \frac{-N_{i} b_{i1}^2}{\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)^{2}}
+$$
+$$
+\frac{\partial^{2} l}{\partial \alpha_{1} \partial \alpha_{2}}=\frac{\partial^{2} l}{\partial \alpha_{2} \partial \alpha_{1}}=\sum_{i=1}^{n} \frac{-N_{i} b_{i1} b_{i 2}}{\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)^{2}}
+$$
+$$
+\frac{\partial^{2} l}{\partial \alpha_{2}^2} =\sum_{i=1}^{n} \frac{-N_{i} b_{i2}^2}{\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)^{2}}
+$$
+The Hessian matrix is defined as:
+$$
+H_{l}(\boldsymbol{\alpha})=\left[\begin{array}{cc}
+\frac{\partial^{2} l}{\partial \alpha_{1}^{2}} & \frac{\partial^{2} l}{\partial \alpha_{1} \partial \alpha_{2}} \\
+\frac{\partial^{2} l}{\partial \alpha_{2} \alpha_{1}} & \frac{\partial^{2} l}{\partial \alpha_{2}^{2}}
+\end{array}\right]
+$$
+Newton's iterative algorithm is therefore defined as:
+$$
+\boldsymbol{\alpha}_{n+1}=\boldsymbol{\alpha}_{n}-\left(H_{l}\left(\boldsymbol\alpha_{n}\right)\right)^{-1} \nabla l\left(\boldsymbol{\alpha}_{n}\right), n=0,1,2, \ldots
+$$
+The R functions to implement this are as follows:
+```{r}
+setwd("/Users/Ben/Library/Mobile Documents/com~apple~CloudDocs/Documents/UTSA Master's/Semester 4/STA 6133 Simulation & Statistical Computing/Homework/Homework 1/")
+#readLines("oilspills.dat")
+oil <- read.table("oilspills.dat", header = TRUE)
+
+# Log-likelihood function for Poisson
+llpois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  return(sum(-term + N*log(term) - log(factorial(N))))
+}
+
+# Gradient of log-likelihood for Poisson
+gradpois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv1 <- sum(-bs[1,] + N*bs[1,]/term)
+  drv2 <- sum(-bs[2,] + N*bs[2,]/term)
+  return(as.matrix(c(drv1,drv2)))
+}
+
+# Hessian of log-likelihood for Poisson
+hesspois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv11 <- sum(-N * (bs[1,])^2 / (term^2))
+  drv12 <- sum(-N * bs[1,] * bs[2,] / (term^2))
+  drv22 <- sum(-N * (bs[2,])^2 / (term^2))
+  return(matrix(c(drv11,drv12, drv12,drv22), nrow = 2, ncol = 2, byrow = TRUE))
+}
+
+# Newton's Method adapted for this problem
+newtonmulti <- function(grad, hess, x0, data1, data2, tol = 1e-9, max.iter = 100) {
+  ## Newton_Raphson algorithm for solving grad == 0.
+  ## x0 is the initial guess of the roots.
+  ## The algorithm terminates when the function value is within distance tol of 0,
+  ## or the number of iterations exceeds max.iter, whichever happens first.
+  
+  # initialise
+  x <- x0
+  fx <- grad(x, data1, data2)
+  iter <-  0
+  # continue iterating until stopping conditions are met
+  while (((abs(fx[1]) > tol) | (abs(fx[2]) > tol)) & (iter < max.iter)) {
+    x <- x - t(solve(hess(x,data1,data2)) %*% grad(x,data1,data2))
+    fx <- grad(x, data1, data2)
+    iter <- iter+1
+    cat("At iteration", iter, "value of x is:", x, "and f is:", fx, "\n")
+  }
+  
+  # output depends on success of algorithm
+  if ((abs(fx[1]) > tol) | (abs(fx[2]) > tol)) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(c(root = x, f.val = fx))
+  }
+}
+```
+Testing the function with a variety of starting points yields:
+```{r}
+# Run Newton's Method
+testalphas <- t(as.matrix(c(1,1)))
+bs <- t(as.matrix(oil[,3:4]))
+N <- oil[,2]
+res <- newtonmulti(gradpois, hesspois, testalphas, bs, N)
+llpois(res[1:2], bs, N)
+
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.5,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.1,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(0.8,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(2,0.5))), bs, N)
+newtonmulti(gradpois, hesspois, t(as.matrix(c(2,2))), bs, N)
+```
+All but one of these starting points converge to the same root, $\boldsymbol{\hat\alpha_{MLE} = (1.0972, 0.9376)}$.  (The final starting point sees $\alpha_2$ converge to a negative number, which seems inappropriate given the Poisson distribution.)  We can plot the log-likelihood for a range of $\alpha$s to check that we are converging to a maximum:
+```{r}
+# Plot the log-likelihood for a variety of alphas to check that we are converging to a maximum
+# Try alphas from 0 to 10
+a1 <- a2 <- seq(from = 0, to = 10, by = 0.1)
+len <- length(a1)^2
+llik <- data.frame(alpha1 = rep_len(0,length.out = len), alpha2 = rep_len(0,length.out = len), value = rep_len(0,length.out = len))
+index <- 0
+# Plot log-likelihood
+for (i in 1:length(a1)) {
+  for (j in 1:length(a2)) {
+    index <- index + 1
+    val <- llpois(c(a1[i],a2[j]), bs, N)
+    llik[index,] <- c(a1[i], a2[j], val)
+  }
+}
+plot_ly(llik, x = ~alpha1, y = ~alpha2, z = ~value)
+max(llik$value, na.rm = TRUE)
+llik[which(llik$value == max(llik$value, na.rm = TRUE)),]
+```
+The maximum does appear in the plot to be where both $\alpha$s are between 0 and 2, and the maximum is near $(1.1,0.9)$, so our root appears correct!
+
+## (b)
+
+Derive the Fisher scoring iterative algorithm for finding the MLE of $\boldsymbol\alpha$, and write an R function to implement this algorithm. Then run this iterative algorithm to compute the MLE of $\boldsymbol\alpha$ based on the above dataset.
+
+The terms of the Fisher Information matrix are:
+$$
+(I(\boldsymbol{\alpha}))_{ij}=-E_{\boldsymbol\alpha}\left[\frac{\partial^{2}}{\partial \alpha_{i} \partial \alpha_{j}} l(\boldsymbol{\alpha}, \textbf{N})\right]
+$$
+The first term can therefore be calculated to be:
+$$
+(I(\boldsymbol\alpha))_{11} = E\left[\frac{\partial^{2} l}{\partial \alpha_{1}^{2}}\right] = E\left[\sum_{i=1}^{n} \frac{N_{i} b_{i1}^{2}}{\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)^{2}}\right] = \sum_{i=1}^{n} \frac{b_{i 1}{ }^{2} E\left[N_{i}\right]}{\left(\alpha_{1} b_{i 1}+\alpha_{2} b_{i2}\right)^{2}}
+$$
+Because $E[N_{i}]$ is the Poisson parameter, we get:
+$$
+=\sum_{i=1}^{n} \frac{b_{i1}^{2}\left(\alpha_{1} b_{i1}+\alpha_{2} b_{i2}\right)}{\left(\alpha_{1} b_{i 1}+\alpha_{2} b_{i 2}\right)^{2}} = \sum_{i=1}^{n} \frac{b_{i1}^2}{\alpha_{1} b_{i1}+\alpha_{2} b_{i 2}}
+$$
+Similarly:
+$$
+(I(\boldsymbol\alpha))_{12} = (I(\boldsymbol\alpha))_{21} = \sum_{i=1}^{n} \frac{b_{i 1} b_{i 2}}{\alpha_{1} b_{i 1}+\alpha_{2} b_{i 2}}
+$$
+$$
+(I(\boldsymbol\alpha))_{22} = \sum_{i=1}^{n} \frac{b_{i2}^2}{\alpha_{1} b_{i1}+\alpha_{2} b_{i 2}}
+$$
+Running Newton's algorithm for the same set of starting points yields:
+```{r}
+# Fisher Information of log-likelihood for Poisson
+ipois <- function(alphas, bs, N) {
+  ## alphas should be 1x2, bs should be 2xn, N should be 1xn
+  term <- alphas %*% bs
+  drv11 <- -sum((bs[1,])^2 / term)
+  drv12 <- -sum(bs[1,] * bs[2,] / term)
+  drv22 <- -sum((bs[2,])^2 / term)
+  return(matrix(c(drv11,drv12, drv12,drv22), nrow = 2, ncol = 2, byrow = TRUE))
+}
+
+# Run Newton's Method
+res2 <- newtonmulti(gradpois, ipois, testalphas, bs, N)
+llpois(res2[1:2], bs, N)
+
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.5,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.1,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(0.8,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(2,0.5))), bs, N)
+newtonmulti(gradpois, ipois, t(as.matrix(c(2,2))), bs, N)
+```
+All converge to the root found in (a), $\boldsymbol{\hat\alpha_{MLE} = (1.0972, 0.9376)}$, even the (2,2) starting point which converged to a negative $\alpha_2$ previously.
+
+## (c)
+
+Compare the implementation ease and performance of the two methods for this dataset.
+
+The Fisher approach results in a matrix with slightly fewer terms in each position than the Hessian, but the derivation and implementation were fairly similar.  We can look at runtime as a measure of performance, however:
+```{r}
+tot_time_H <- numeric(100)
+tot_time_F <- numeric(100)
+for (i in 1:100) {
+  # Run time to generate Hessian matrix
+  start_time_H <- Sys.time()
+  hesspois(testalphas, bs, N)
+  end_time_H <- Sys.time()
+  tot_time_H[i] <- as.numeric(end_time_H - start_time_H)
+  #print(paste0("Hessian method takes ", tot_time_H))
+
+  # Run time to generate Fisher Information matrix
+  start_time_F <- Sys.time()
+  ipois(testalphas, bs, N)
+  end_time_F <- Sys.time()
+  tot_time_F[i] <- as.numeric(end_time_F - start_time_F)
+  #print(paste0("Fisher Information method takes ", tot_time_F))
+}
+print(paste0("Hessian method takes an average of ", mean(tot_time_H)," over 100 attempts on the same data."))
+print(paste0("Fisher Information method takes an average of ", mean(tot_time_F)," over 100 attempts on the same data."))
+print(paste0("Fisher Information method is, on average, ",round((mean(tot_time_H) - mean(tot_time_F))/mean(tot_time_H)*100, digits = 3),"% faster than the Hessian method on this data."))
+```
+We can see that calculating the Fisher Information matrix is slightly faster than calculating the Hessian.
+
+## (d)
+
+Estimate the standard errors of the MLEs of $\alpha_1$ and $\alpha_2$.
+
+We can estimate the standard errors by taking the square root of the diagonal of the inverse Hessian (or its approximation):
+```{r}
+sqrt(diag(solve(-hesspois(res[1:2], bs, N))))   # Estimated standard errors of MLEs is square root of diagonal of inverse Hessian matrix
+sqrt(diag(solve(-ipois(res[1:2], bs, N))))   # Estimated standard errors of MLEs is square root of diagonal of inverse Fisher Information matrix
+```
+We see that the standard errors when using the actual Hessian matrix are smaller than when using the Fisher Information matrix in its place.  In both cases, the standard error for $\alpha_1$ is smaller than that of $\alpha_2$.

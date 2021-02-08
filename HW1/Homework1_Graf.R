@@ -329,17 +329,26 @@ newtonmulti(gradpois, ipois, t(as.matrix(c(2,2))), bs, N)
 
 #### 4(c) ####
 
-# Run time to generate Hessian matrix
-start_time <- Sys.time()
-hesspois(testalphas, testbs, testN)
-end_time <- Sys.time()
-print(paste0("Hessian method takes ", end_time-start_time))
+tot_time_H <- numeric(100)
+tot_time_F <- numeric(100)
+for (i in 1:100) {
+  # Run time to generate Hessian matrix
+  start_time_H <- Sys.time()
+  hesspois(testalphas, bs, N)
+  end_time_H <- Sys.time()
+  tot_time_H[i] <- as.numeric(end_time_H - start_time_H)
+  #print(paste0("Hessian method takes ", tot_time_H))
 
-# Run time to generate Fisher Information matrix
-start_time <- Sys.time()
-ipois(testalphas, testbs, testN)
-end_time <- Sys.time()
-print(paste0("Fisher Information method takes ", end_time-start_time))
+  # Run time to generate Fisher Information matrix
+  start_time_F <- Sys.time()
+  ipois(testalphas, bs, N)
+  end_time_F <- Sys.time()
+  tot_time_F[i] <- as.numeric(end_time_F - start_time_F)
+  #print(paste0("Fisher Information method takes ", tot_time_F))
+}
+print(paste0("Hessian method takes an average of ", mean(tot_time_H)," over 100 attempts on the same data."))
+print(paste0("Fisher Information method takes an average of ", mean(tot_time_F)," over 100 attempts on the same data."))
+print(paste0("Fisher Information method is, on average, ",round((mean(tot_time_H) - mean(tot_time_F))/mean(tot_time_H)*100, digits = 3),"% faster than the Hessian method on this data."))
 
 
 #### 4(d) ####
