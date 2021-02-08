@@ -99,3 +99,195 @@ plot(c(1,5,10),c(df1_new$rel_err,df2_new$rel_err,df3_new$rel_err), ylab = "Relat
 
 
 Using the new solution provides a better estimate of the roots when subtractive cancellation is present in the original equation, it is clear to see in the plot above that the relative error stays near 0 for all N's. 
+
+\pagebreak
+
+# 3
+ 
+ The following data are an i.i.d. sample from the $Cauchy(\theta , 1)$ distribution: 
+$$\begin{array}
+{rrr}
+1.77 & -0.23 & 2.76 & 3.80 & 3.47 & 56.75 \\
+-1.34 & 4.24 & -2.44 & 3.29 & 3.71 & -2.40 & \\
+4.53 & -0.07 & -1.05 & -13.87 & -2.53 & -1.75 \\
+0.27 & 43.21
+\end{array}
+$$
+
+## a 
+
+Plot the  log–likelihood function. Then find the MLE of θ using Newton’s method. Try all
+the following starting values: −11, −1, 0, 1.5, 4, 4.7, 7, 38. Discuss your results. Is the sample mean a good starting point?
+
+```{r}
+#Import the data 
+data <- c(1.77, -0.23, 2.76, 3.80, 3.47, 56.75, -1.34, 4.24, -2.44, 3.29,
+          3.71, -2.40, 4.53, -0.07, -1.05, -13.87, -2.53, -1.75, 0.27, 43.21)
+
+n <- length(data)
+
+#log likelihood cauchy function
+log_cauchy <- function(theta){
+  return(n*log(pi)-sum(log(1+(data-theta)^2)))
+}
+#first derivative of the log-likelihood
+log_cauchy_prime <- function(theta){
+return(sum(2*(data-theta)/(1+(data-theta)^2)))
+}
+
+#second derivative of the log-likelihood
+log_cauchy_2prime <- function(theta){
+  return(sum(2*(-1+(data-theta)^2) / (1+(data-theta)^2)^2))
+}
+
+#function for log-cauchy and log-cauchy prime
+cauchy <- function(theta){
+  return(c(log_cauchy(theta),
+           log_cauchy_prime(theta)))
+}
+#function for log-cauchy prime and 2nd prime of log-cauchy 
+cauchy_primes <-function(theta){
+  return(c(log_cauchy_prime(theta),log_cauchy_2prime(theta)))
+}
+
+theta_list <- seq(-50,50,.1)
+values = sapply(theta_list, cauchy)
+
+log_cauchy_values <- values[1,]
+log_cauchy_prime_values <- values[2,]
+
+plot(theta_list,log_cauchy_values, type = "l", main = "Log Cauchy Distribution",xlab = "Theta", ylab = "log-likelihood")
+plot(theta_list,log_cauchy_prime_values, type = "l", main= "Log Prime Cauchy Distribution", xlab = "Theta", ylab = "prime-log-likelihood")
+abline(h = 0, col = "red")
+
+
+# Newton's Method function provided by Dr. DeOliveira
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+  ## Newton_Raphson algorithm for solving ftn(x)[1] == 0
+  ## It is assumed that ftn is a function of a single variable that returns
+  ## the function value and its first derivative as a vector of length 2.
+  ## x0 is the initial guess of the root.
+  ## The algorithm terminates when the function value is within distance tol of 0,
+  ## or the number of iterations exceeds max.iter, whichever happens first
+  # initialise
+  x <- x0
+  fx <- ftn(x)
+  iter <-  0
+  # continue iterating until stopping conditions are met
+  while ((abs(fx[1]) > tol) & (iter < max.iter)) {
+    x <- x - fx[1]/fx[2]
+    fx <- ftn(x)
+    iter<- iter+1
+    #cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+  # output depends on success of algorithm
+  if (abs(fx[1]) > tol) {
+    #cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    #cat("Algorithm converged\n")
+    return(c(root = x, f.val = fx[1]))
+  }
+}
+
+mle_values <- roots <- test_values <- c(-11,-1,0,1.5,4,4.7,7,38, mean(data))
+
+for(i in 0:length(test_values)){
+  root = newtonraphson(cauchy_primes,test_values[i])[1]
+  roots[i] = root
+  mle_values[i] = log_cauchy(root)
+}
+roots
+
+ ### max value is at -1
+cat(paste0("The MLE is ",test_values[which.max(mle_values)]))
+```
+
+Utilizing different starting points resulted in getting several different root values, which given the execution pattern of the newton-raphson algorithm and the log-prime cauch distribution plot above would be expected. Using the sample mean for a cauchy distribution is not very advantageous on it's own because the cauchy distribution does not have a population mean. It did not show any benefits to using that over any of the other points. 
+
+As mentioned above the MLE is at -1. 
+
+## b 
+
+Apply the bisection method with bracketing interval [−1, 1]. Comment on the result.
+Now run the bisection method with another bracketing interval that makes the algoritm
+converge to the ‘wrong root’, i.e., to a local maximum
+
+```{r}
+
+# Bisection Method function provided by Dr. DeOliveira
+bisection <- function(f, x1, x2, maxit = 1000, tol = 1e-7, stop.fval = TRUE) {
+  # it uses absolute error as stopping criterion when stop.fval = FALSE
+  f1 <- f(x1)
+  if (abs(f1) < tol)
+    return(x1)
+  f2 <- f(x2)
+  if (abs(f2) < tol)
+    return(x2)
+  if (f1 * f2 > 0)
+    stop("f has equal sign at endpoints of initial interval")
+  if (f1 > 0) { # swap x1 and x2
+    tmp <- x1 ; x1 <- x2 ; x2 <- tmp 
+  }
+  n <- 0 # counter
+  x <- x1
+  repeat {
+    n <- n + 1
+    x.mid <- (x1 + x2) / 2
+    f.mid <- f(x.mid)
+    if(stop.fval == TRUE) {
+      if(abs(f.mid) < tol | n == maxit)
+        break }
+    else if(abs(x.mid - x) < tol | n == maxit)
+      break
+    if(f.mid<0){ x1 <- x.mid ; x <- x1}
+    else { x2 <- x.mid ; x <- x2 }
+  }
+  return(list(root = x.mid, f = f.mid, iter = n))
+}
+
+bisection(log_cauchy_prime, -1, 1, tol = 1e-9)
+```
+
+The bisection took 31 iterations to converge with the given brackets, the newton-raphson at most took just around the same with only a starting point, and with several of the points newton's method took less than 10 iterations. Below we also see a disadvantage in possible converging to a local maximum if a proper interval is not specified. 
+
+```{r}
+bisection(log_cauchy_prime, 1, 2, tol = 1e-9)   #This bracket converges to a local maximum, not the global
+
+```
+## c
+
+Apply a fixed–point iteration with starting value −1 and scaling choices α = 1, 0.64, 0.25.
+Discuss your results.
+
+
+```{r}
+
+fixedpoint <- function(f, starting, alpha, maxit = 1000, tol = 1e-9) {
+  # g(x) = x + alpha * f(x)
+  x <- starting
+  fx <- f(starting)
+  iter <- 0
+  while ((abs(fx) > tol) & (iter < maxit))  {
+    x <- x + alpha*fx
+    fx <- f(x)
+    iter <- iter + 1
+    #cat("At iteration", iter, "value of x is:", x, "\n")
+  }
+  if (abs(fx) > tol) {
+    cat("Algorithm failed to converge\n")
+    return(NULL)
+  } else {
+    cat("Algorithm converged\n")
+    return(list(root = x, f.val = fx, iter = iter))
+  }
+}
+
+fixedpoint(log_cauchy_prime, -1, 1)
+fixedpoint(log_cauchy_prime, -1, 0.64)
+fixedpoint(log_cauchy_prime, -1, 0.25)
+fixedpoint(log_cauchy_prime, -1, 0.2)
+
+```
+
+Given the alpha's and the starting point used one failed to converge, while .64 took close to 700 iterations to converge, and .25 took 16 iterations. Reducing the alpha any lower with the same starting point increases the amount of iteration it would take to converge as well. 
