@@ -2,7 +2,9 @@
 title: 'STA 6133: Homework 1'
 author: "Ricardo Cortez & Ben Graf"
 date: "Due 9 Feb 2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -501,27 +503,7 @@ newtonmulti(gradpois, hesspois, t(as.matrix(c(0.8,0.5))), bs, N)
 newtonmulti(gradpois, hesspois, t(as.matrix(c(2,0.5))), bs, N)
 newtonmulti(gradpois, hesspois, t(as.matrix(c(2,2))), bs, N)
 ```
-All but one of these starting points converge to the same root, $\boldsymbol{\hat\alpha_{MLE} = (1.0972, 0.9376)}$.  (The final starting point sees $\alpha_2$ converge to a negative number, which seems inappropriate given the Poisson distribution.)  We can plot the log-likelihood for a range of $\alpha$s to check that we are converging to a maximum:
-```{r}
-# Plot the log-likelihood for a variety of alphas to check that we are converging to a maximum
-# Try alphas from 0 to 10
-a1 <- a2 <- seq(from = 0, to = 10, by = 0.1)
-len <- length(a1)^2
-llik <- data.frame(alpha1 = rep_len(0,length.out = len), alpha2 = rep_len(0,length.out = len), value = rep_len(0,length.out = len))
-index <- 0
-# Plot log-likelihood
-for (i in 1:length(a1)) {
-  for (j in 1:length(a2)) {
-    index <- index + 1
-    val <- llpois(c(a1[i],a2[j]), bs, N)
-    llik[index,] <- c(a1[i], a2[j], val)
-  }
-}
-plot_ly(llik, x = ~alpha1, y = ~alpha2, z = ~value)
-max(llik$value, na.rm = TRUE)
-llik[which(llik$value == max(llik$value, na.rm = TRUE)),]
-```
-The maximum does appear in the plot to be where both $\alpha$s are between 0 and 2, and the maximum is near $(1.1,0.9)$, so our root appears correct!
+All but one of these starting points converge to the same root, $\boldsymbol{\hat\alpha_{MLE} = (1.0972, 0.9376)}$.  (The final starting point sees $\alpha_2$ converge to a negative number, which seems inappropriate given the Poisson distribution.)  Plotting the log-likelihood for a range of $\alpha$s (not shown) to check that we are converging to a maximum reveals that the maximum does appear to be where both $\alpha$s are between 0 and 2, with the highest-valued sample point being $(1.1,0.9)$, so our root appears to be correct!
 
 ## (b)
 
