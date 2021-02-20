@@ -121,7 +121,6 @@ gq_sum <- function(b,a,x,fx,w){
 }
 
 
-
 #SUmmary:
 print("Integrate Function")
 print(true_integral)
