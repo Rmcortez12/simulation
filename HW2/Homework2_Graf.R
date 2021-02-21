@@ -3,7 +3,7 @@
 # Homework 2
 # Due 26 Feb 2021
 
-pacman::p_load(pacman, statmod)
+pacman::p_load(pacman, statmod, lme4)
 
 #### 1 ####
 
@@ -58,3 +58,20 @@ lag100 <- gauss.quad(n = 100, kind = "laguerre", alpha = 0)   #Get weights and n
 (Q1d_n100 <- sum(lag100$weights * prob1dfunc(lag100$nodes)))
 
 integrate(prob1dorig, lower = 1, upper = Inf)
+
+
+#### 2 ####
+
+#Import and set up data
+setwd("/Users/Ben/Library/Mobile Documents/com~apple~CloudDocs/Documents/UTSA Master's/Semester 4/STA 6133 Simulation & Statistical Computing/Homework/Homework 2")
+toenail <- read.csv("./toenail.txt", header = FALSE, sep = " ")
+names(toenail) <- c("patient", "response", "treatment", "time")
+
+model <- glmer(response ~ treatment*time + (1 | patient), data = toenail, family = "binomial")
+summary(model)
+#plot(model)
+
+preds <- predict(model, newdata = toenail)
+binpreds <- preds>=0.5
+table(toenail$response, binpreds)
+mean(toenail$response == binpreds)
