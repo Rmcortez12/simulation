@@ -65,46 +65,23 @@ nc_sum <-sum(nc_sum_vec)
 #P(x)= 1/16*(429x^7-693*x^5+315*x^3-35*x)
 legendre_7_vec <- c(0,-35/16,0,315/16,0,-693/16,0,429/16)
 legendre_roots <- Re(polyroot(legendre_7_vec))
-
-
 x <- sort(legendre_roots)
+
+#utilize the same matrix from part a just with legendre roots
+xb_mat <- weight_matrix_nc(x)
+
 #create solution vector
-y_gq <-  1:length(legendre_roots)
-for(i in 1:length(legendre_roots)){
-  if(i==1){
-    y_gq[i] = 2
-  } else if(i == length(legendre_roots)||i == 2){
-    y_gq[i] = 0
-  }else if(i%%2==0){
-    y_gq[i] = 2/(i+1)
-  }else {
-    y_gq[i] = 0
-  }
+yb_vec <- 1:7
+for(i in 1:7){
+  yb_vec[i] <- (1^i-(-1)^i)/i
 }
-
-#create weight matrix
-weight_matrix_gq <- function(x){
-  len_x <- length(x)
-  z_mat <- matrix(1,ncol = len_x, nrow = len_x)
-  
-  for(i in 1:len_x){
-    z_mat[len_x,i] <- x[i]
-  }
-  for(i in 3:len_x-1){
-    for(j in 1:len_x){
-      z_mat[i,j] <- x[j]^i
-    }
-  }
-  for(i in 1:len_x){
-    z_mat[len_x,i] <- x[i]^(2*len_x-1)
-  }
-  return(z_mat)
-}
-
-z<-weight_matrix_gq(x)
 
 #solve for weights
-weights_gq <- solve(z,matrix(y_gq))
+wb_res <- solve(xb_mat[,1:7],yb_vec)
+
+
+
+#weights_gq <- solve(z,matrix(y_gq))
 #need to change intervals to fit [-1,1]
 #f(x) --> f(5x+5)
 gq_sum <- function(b,a,x,fx,w){
@@ -127,13 +104,26 @@ print(true_integral)
 print("Newton-cotes:")
 print(nc_sum)
 print("Gauss-Quad")
-print(gq_sum(10,0,x,fx,weights_gq))
+print(gq_sum(10,0,x,fx,wb_res))
 
 
-#D.  Gauss - Legendre
-#P'(X)=1/16*(30086x^6-3465*x^4+945*x^2-35)
-#Weights are given by: 
-#w[i] = 2/((1-x[i]^2)*(P'(x[i]))^2), i = 1,...,n
+#D.  Gauss - Laguerre
 
+#Define the equations
+fx_d <- function(x){
+  return((x+1)/x^4)
+}
+ft_d <- function(t){
+  return(exp(t)*(t+2)/(t+1)^4)
+}
 
-#Note for Gauss-Quadrature need to do a change of variables
+#need points and weights for n=10, n=100
+df10 <- gauss.quad(10, kind = "laguerre", alpha = 0)
+df100 <- gauss.quad(100, kind = "laguerre", alpha = 0)
+
+#now we sum
+estimate10 <- sum(df10$weights*ft_d(df10$nodes))
+estimate100 <- sum(df100$weights*ft_d(df100$nodes))
+
+#Actual value
+integrate(fx_d,1,Inf)
