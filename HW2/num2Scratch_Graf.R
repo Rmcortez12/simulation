@@ -77,11 +77,12 @@ loglik_appx <- function(eta, data){
 }
 
 
-loglik_appx_2 <- function(eta, data){
+loglik_appx_2 <- function(eta, data) {
   
   # Approximate the integral for each patient
-  integral_appx <- vector(mode = "numeric", length = nrow(y))
-  for (pat in 1:nrow(y)) {
+  n <- length(unique(data$patient_count))
+  integral_appx <- vector(mode = "numeric", length = n)
+  for (pat in 1:n) {
     the_rows <- which(data$patient_count == pat)
     yi <- data[the_rows,]$response
     trti <- data[the_rows[1],]$treatment
@@ -96,7 +97,7 @@ loglik_appx_2 <- function(eta, data){
 
 
 eta0 <- c(0, 0, 0, 0, 1) # Initial values
-ml <- optim(eta0, loglik_appx, data = d, method = "L-BFGS-B",
+ml <- optim(eta0, loglik_appx_2, data = d, method = "L-BFGS-B",
             lower = c(-Inf, -Inf, -Inf, -Inf, 0), 
             upper = c(Inf, Inf, Inf, Inf, Inf), hessian=T)
 
