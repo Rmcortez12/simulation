@@ -75,3 +75,52 @@ preds <- predict(model, newdata = toenail)
 binpreds <- preds>=0.5
 table(toenail$response, binpreds)
 mean(toenail$response == binpreds)
+
+
+#### 3 ####
+
+# (a)
+
+my_rand <- function(m, F) {
+  # The function arguments must be m = the number of required draws,
+  # and F, a continuous and strictly increasing cdf.
+  
+  
+}
+
+# (b)
+
+#Use your function to simulate one random sample of size 10000 from the Gamma(3, 1) distribution, and one random sample of size 10000 from the Gamma(0.3,1) distribution. Assess the adequacy of your output by overlaying in the same plot the histogram of your output and the density of the distribution.
+
+my_rand(m = 10000, F = pgamma())
+
+
+#### 4 ####
+
+# (c)
+
+rtriangular <- function(m, a, b) {
+  # The function arguments must be m = the number of required draws and the parameters a and b.
+  u <- runif(m)
+  Q <- ifelse(u < 0.5, 2*a + (b-a)*sqrt(2*u), 2*b - (b-a)*sqrt(2-2*u))
+  return(Q)
+}
+
+a <- 2/2
+b <- 8/2
+set.seed(1)
+samp <- rtriangular(10000, a, b)   # Simulate one random sample of size 10000 from the triangular distribution on (2, 8) = (2a, 2b)
+hist(samp, probability = TRUE, ylim = c(0,0.35), main = "10,000 draws from Triangular distribution on (2,8)", xlab = "")
+lines(density(samp), col = 2)
+
+tri_pdf <- function(x, a, b) {
+  f <- ifelse(x<2*a | x>2*b, 0, ifelse(x<a+b, (x-2*a)/(b-a)^2, (2*b-x)/(b-a)^2) )
+  return(f)
+}
+
+range <- seq(from = 2*a, to = 2*b, by = 0.01)
+lines(x = range, y = tri_pdf(range, a, b), col = 4)
+legend("topright", legend = c("Sample density", "Actual PDF"), lty = 1, col = c(2,4), )
+
+
+
