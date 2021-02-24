@@ -39,21 +39,22 @@ sim <- function(F,m){
   x <- seq(0,m)
   
   F.inv <- function(y){uniroot(function(x){
-    print(F(X)-y)
+    #print(F(X)-y)
     F(x)-y
-    },interval=c(0,m))$root}
+    },interval=c(0,100))$root}
   F.inv <- Vectorize(F.inv)
 
   X <- runif(m,0,1)   # random sample from U[0,1]
   Z <- F.inv(X)
   return(Z)
 }
+
 sim(F,1000)
 
-F_gamma_3_1 <- function(x){
-  return(dgamma(x,3,1))
+F <- function(x){
+  return(pgamma(x,3,2))
 }
 
-sim(F_gamma_3_1,10000)
+a<-sim(F_gamma_3_1,10000)
 
-
+hist(a)
