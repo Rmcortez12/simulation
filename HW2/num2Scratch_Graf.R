@@ -13,7 +13,7 @@ f <- function(u, eta, yi, trti, txi) {
   return( prod(p^yi * (1-p)^(1-yi)) ) 
 }
 
-#fv <- Vectorize(f, vectorize.args = "txi")
+fv <- Vectorize(f, vectorize.args = "u")
 
 #bring in necessary libraries
 library(statmod)
@@ -30,7 +30,7 @@ d <- read.table("http://faculty.business.utsa.edu/vdeolive/toenail.txt",
                 header=F)
 names(d) <- c("patient", "response", "treatment", "time", "visit")
 #patient ID, binary response, treatment code, time of eval
-trt <- d[,3]
+#trt <- d[,3]
 
 
 # Create a patient_count variable in the dataset to denote this is the nth patient 
@@ -81,17 +81,17 @@ loglik_appx_2 <- function(eta, data) {
   
   # Approximate the integral for each patient
   n <- length(unique(data$patient_count))
-  integral_appx <- vector(mode = "numeric", length = n)
+  integral_appx <- c()
   for (pat in 1:n) {
     the_rows <- which(data$patient_count == pat)
     yi <- data[the_rows,]$response
     trti <- data[the_rows[1],]$treatment
     txi <- data[the_rows,]$time
-    integral_appx[pat] <- sum(b$weights * f(b$nodes, eta, yi, trti, txi))
+    integral_appx[pat] <- sum(b$weights * fv(b$nodes, eta, yi, trti, txi))
   }
   
   # Combine all patients with negative log product
-  return(-log(prod(integral_appx)))
+  return(-sum(log(integral_appx)))
 }
 
 
@@ -99,7 +99,7 @@ loglik_appx_2 <- function(eta, data) {
 eta0 <- c(0, 0, 0, 0, 1) # Initial values
 ml <- optim(eta0, loglik_appx_2, data = d, method = "L-BFGS-B",
             lower = c(-Inf, -Inf, -Inf, -Inf, 0), 
-            upper = c(Inf, Inf, Inf, Inf, Inf), hessian=T)
+            upper = c(Inf, Inf, Inf, Inf, Inf), hessian = TRUE)
 
 ## Maximum likelihood estimates of beta_0, beta_1, beta_2, beta_3, and sigma
 ml$par
