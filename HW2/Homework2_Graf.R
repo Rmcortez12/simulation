@@ -3,7 +3,7 @@
 # Homework 2
 # Due 26 Feb 2021
 
-pacman::p_load(pacman, statmod, lme4)
+pacman::p_load(pacman, statmod, lme4, stats)
 
 #### 1 ####
 
@@ -72,27 +72,54 @@ summary(model)
 #plot(model)
 
 preds <- predict(model, newdata = toenail)
-binpreds <- preds>=0.5
-table(toenail$response, binpreds)
-mean(toenail$response == binpreds)
+binpreds <- preds>=0.5   #Bin prediction probabilities as either 0 or 1
+table(toenail$response, binpreds)   #Confusion matrix
+mean(toenail$response == binpreds)   #Accuracy
 
 
 #### 3 ####
 
 # (a)
 
-my_rand <- function(m, F) {
+my_rand <- function(m, F, interval = c(-100,100)) {
   # The function arguments must be m = the number of required draws,
   # and F, a continuous and strictly increasing cdf.
+  # Added a third optional variable, interval, which is the interval over which to evaluate F (needed for root-finding).
+  #   interval should be formatted as a length-2 vector as seen in the default value in the function definition.
   
-  
+  u <- runif(m)   #Draw from Uniform(0,1)
+  inverse_cdf <- c()
+  for (i in 1:m) {
+    #Calculate inverse CDF using root-finding for each draw from Uniform(0,1)
+    inverse_cdf[i] <- uniroot(function(t){F(t) - u[i]}, interval = interval)$root
+  }
+  return(inverse_cdf)
 }
+
 
 # (b)
 
-#Use your function to simulate one random sample of size 10000 from the Gamma(3, 1) distribution, and one random sample of size 10000 from the Gamma(0.3,1) distribution. Assess the adequacy of your output by overlaying in the same plot the histogram of your output and the density of the distribution.
+m <- 10000
 
-my_rand(m = 10000, F = pgamma())
+gamma_test_1 <- function(x) { return(pgamma(x, shape = 3, scale = 1)) }   #CDF of Gamma(3,1)
+set.seed(1)
+output_1 <- my_rand(m = m, F = gamma_test_1, interval = c(0,100))
+hist(output_1, probability = TRUE, ylim = c(0,0.3), main = "Random sampling from Gamma(3,1)")
+range_1 <- seq(from = 0, to = 12, by = 0.01)
+lines(x = range_1, y = dgamma(range_1, shape = 3, scale = 1), col = 2)   #Add actual density curve
+
+gamma_test_2 <- function(x) { return(pgamma(x, shape = 0.3, scale = 1)) }   #CDF of Gamma(0.3,1)
+set.seed(1)
+output_2 <- my_rand(m = m, F = gamma_test_2, interval = c(0,100))
+hist(output_2, probability = TRUE, main = "Random sampling from Gamma(0.3,1)")
+range_2 <- seq(from = 0, to = 6, by = 0.01)
+lines(x = range_2, y = dgamma(range_2, shape = 0.3, scale = 1), col = 2)   #Add actual density curve
+
+# (c)
+
+q <- qgamma(ppoints(m), shape = 3, scale = 1)   # Quantile points for true density
+qqplot(q, output_1, cex = 0.5, xlab = "Gamma(3,1)", ylab = "Sample")
+abline(0,1)
 
 
 #### 4 ####
@@ -114,12 +141,13 @@ hist(samp, probability = TRUE, ylim = c(0,0.35), main = "10,000 draws from Trian
 lines(density(samp), col = 2)
 
 tri_pdf <- function(x, a, b) {
+  # The PDF of the triangular distribution
   f <- ifelse(x<2*a | x>2*b, 0, ifelse(x<a+b, (x-2*a)/(b-a)^2, (2*b-x)/(b-a)^2) )
   return(f)
 }
 
 range <- seq(from = 2*a, to = 2*b, by = 0.01)
-lines(x = range, y = tri_pdf(range, a, b), col = 4)
+lines(x = range, y = tri_pdf(range, a, b), col = 4)   #Add actual PDF curve
 legend("topright", legend = c("Sample density", "Actual PDF"), lty = 1, col = c(2,4), )
 
 
