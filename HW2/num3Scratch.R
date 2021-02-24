@@ -38,12 +38,22 @@ Z <- F.inv(X)
 sim <- function(F,m){
   x <- seq(0,m)
   
-  F.inv <- function(y){uniroot(function(x){F(x)-y},interval=c(0,100))$root}
+  F.inv <- function(y){uniroot(function(x){
+    print(F(X)-y)
+    F(x)-y
+    },interval=c(0,m))$root}
   F.inv <- Vectorize(F.inv)
 
-  X <- runif(1000,0,1)   # random sample from U[0,1]
+  X <- runif(m,0,1)   # random sample from U[0,1]
   Z <- F.inv(X)
   return(Z)
 }
 sim(F,1000)
+
+F_gamma_3_1 <- function(x){
+  return(dgamma(x,3,1))
+}
+
+sim(F_gamma_3_1,10000)
+
 
