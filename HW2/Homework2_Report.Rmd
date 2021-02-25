@@ -109,9 +109,89 @@ using the Gauss–Laguerre quadrature rule of orders $n = 10$ and $100$. Compare
 
 \pagebreak
 
-
 # 2. 
 
+Browse the article: Lesaffre, E. and Spiessens, B. (2001), On the Effect of the Number of
+Quadrature Points in a Logistic Random–Effects Model: An Example, Applied Statistics,
+50, 325-335. This article deals with a randomized, double–blind, parallel–group, multicenter
+study involved 294 patients to compare two oral treatments (denoted A and B) for toenail
+infection. Patients were evaluated at week 0 (baseline) and at weeks 4, 8, 12, 24, 36, and
+48. For each visit the response was a binary variable indicating the presence of onycholysis
+(separation of the nail plate from the nail bed). Interest centers in the rate of decline of the
+proportion of patients with onycholysis over time and the effects of treatment on that rate.
+The data are at: http://faculty.business.utsa.edu/vdeolive/toenail.txt
+The meaning of the first four columns are respectively: patient ID, binary response, treatment
+code and time of evaluation from the start (in months).
+
+Let $Y_{ij}$ denote the binary response of the $i^{th}$ patient in the $j^{th}$ visit, $i = 1,...,294$ and $j = 1,...,7$. A possible model for these data is the following generalized linear mixed model: 
+
+$$ Y_{ij}|\gamma_i \overset{\mathrm{ind}}\sim  Ber(\pi_{ij}(\beta,\gamma_i))$$
+$$\gamma_i \overset{\mathrm{i.i.d.}}\sim N(0,\sigma^2),     i = 1,...,294; j = 1,...,7$$
+
+where
+
+$$ \pi_{i,j}(\beta, \gamma_i) = P_\beta(Y_{ij} = 1 | \gamma_i,x_{ij}) =\frac{exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij}*trt_i+\gamma_i)}{1+exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij}*trt_i+\gamma_i)}  $$
+$\beta = (\beta_0,\beta_1,\beta_2,\beta_3)$ are unknown parameters and $x_{ij} = (trt_i, t_{ij} )$ are known covariates, with
+$trt_i$ the treatment indicator of patient i (= 1 if patient i received treatment B, = 0 otherwise), and $t_{ij}$ is the time from the start of treatment of the $j^{th}$ visit for the $i^{th}$ patient.
+
+
+## (a) 
+
+Compute the MLE of  $$\eta = (\beta_0', \sigma^2)$$  and their approximate standard errors. You may either
+adapt to the above model the code in the handout for the mixed effect model for count data,or else use the function glmer in the R package lme4.
+
+The Likelihood function must derived in order to find the MLE. 
+
+$$ L(\beta, Y) = P_\beta(Y) = \int_{I\!R^{294}} P(Y,\gamma)d\gamma = \int_{I\!R^{294}} P(Y|\gamma)P(\gamma)d\gamma$$
+
+By independence
+
+$$= \int_{I\!R^{294}} \prod^{294}_{i=1} P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
+Integrand is product of one variable functions
+
+
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty} P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
+
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
+
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}[P(Y_{ij}|\gamma_i)]P(\gamma_i)d\gamma_i$$
+Recall Bernoulli PMF and standardized normal PDF
+
+$$Bernoulli: f(x) = p^x(1-p)^{1-x}$$
+$$Normal: f(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$$
+
+Recall Gauss-Hermite quadrature form:
+
+$$\int_{-\infty}^{\infty}e^{-x^2}f(x)dx \approx \sum_i^nw_if(x_i)$$
+Plug back into equation
+
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma})d\gamma_i$$
+
+where 
+
+$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = \frac{1}{\sigma\sqrt{2\pi}}\int_{-\infty}^xe^{-(\frac{\gamma_i}{\sigma})^2/2}dt$$
+with u- substitution 
+
+$$u_i = \frac{\gamma_i}{\sigma\sqrt2} ~~~~~~~~~~~~~~~~~ du_i = \frac{1}{{\sigma\sqrt2}}d\gamma_i  $$
+ends up with
+
+$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = e^{u{_i}^2}du_i$$
+Now plug back into equation again to obtain final Likelihood equation
+
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})e^{u{_i}^2}du_i$$
+and log likelihood is
+
+
+$$l = log(\prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})e^{u{_i}^2}du_i)$$
+Now put in Gauss-Hermite form: 
+
+$$=\int_{-\infty}^{\infty}e^{-u_{i}^2}f(\beta,y_i,\sigma\sqrt2u_i)du_i \approx \sum_i^nw_if(\beta,y_i,\sigma\sqrt2u_i)$$
+where 
+
+$$f(\beta,y_i,\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}}) $$
+
+
+## (b) Interpret the results.
 
 \pagebreak
 
