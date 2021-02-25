@@ -13,6 +13,8 @@ n <- 7
 a <- 0
 b <- 10
 xa <- seq(from = a, to = b, by = (b-a)/(n-1))
+
+# Set up X matrix and y vector
 Xa_matrix <- matrix(nrow = n, ncol = n)
 ya <- vector(mode = "numeric", length = n)
 for (i in 1:n) {
@@ -44,7 +46,9 @@ for (i in 1:n) {
 
 # (c)
 
-integrate(prob1afunc, lower = a, upper = b)
+(Q1c <- integrate(prob1afunc, lower = a, upper = b))
+(Q1a-Q1c$value)/Q1c$value   #Relative error between Newton-Cotes and integrate()
+(Q1b-Q1c$value)/Q1c$value   #Relative error between Gauss-Legendre and integrate()
 
 # (d)
 
@@ -54,10 +58,12 @@ prob1dfunc <- function(t) { return( exp(t)*(t+2) / (t+1)^4 ) }   # Define functi
 lag10 <- gauss.quad(n = 10, kind = "laguerre", alpha = 0)   #Get weights and nodes
 lag100 <- gauss.quad(n = 100, kind = "laguerre", alpha = 0)   #Get weights and nodes
 
-(Q1d_n10 <- sum(lag10$weights * prob1dfunc(lag10$nodes)))
-(Q1d_n100 <- sum(lag100$weights * prob1dfunc(lag100$nodes)))
+(Q1d_n10 <- sum(lag10$weights * prob1dfunc(lag10$nodes)))   #For n=10
+(Q1d_n100 <- sum(lag100$weights * prob1dfunc(lag100$nodes)))   #For n=100
 
-integrate(prob1dorig, lower = 1, upper = Inf)
+(Q1d <- integrate(prob1dorig, lower = 1, upper = Inf))
+(Q1d_n10-Q1d$value)/Q1d$value   #Relative error between Gauss-Laguerre, n=10, and integrate()
+(Q1d_n100-Q1d$value)/Q1d$value   #Relative error between Gauss-Laguerre, n=100, and integrate()
 
 
 #### 2 ####
