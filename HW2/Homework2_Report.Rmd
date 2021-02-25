@@ -20,6 +20,7 @@ $$
 I=\int_{0}^{10} \exp \left(\frac{-1}{1+x^{2}}\right) d x
 $$
 
+
 ## (a)
 
 Approximate $I$ using the Newton–Cotes quadrature rule of order $n = 7$. 
@@ -84,17 +85,80 @@ prob1afunc <- function(x) { return( exp(-1/(1+x^2)) ) }   # Define function to b
 ```
 
 
-
-
-
 ## (b)
 
 Approximate $I$ using using a Gauss quadrature rule of order $n = 7$.
+
+We can convert the bounded integral:
+$$
+I=\int_{0}^{10} \exp \left(\frac{-1}{1+x^{2}}\right) d x
+$$
+
+Using the following change of variables:
+$$
+t=(2 x-(a+b)) /(b-a) \quad \Rightarrow \quad x=((b-a) t+a+b) / 2, \quad d x=(b-a) / 2 \; dt
+$$
+
+This leads to a revised integral:
+$$
+\int_{a}^{b} f(x) d x=\frac{b-a}{2} \int_{-1}^{1} f\left(\frac{(b-a) t+a+b}{2}\right) d t
+$$
+
+The corresponding Gauss-Legendre quadrature equation is then ($a=0, \; b=10$):
+$$
+Q_{7}^{G L}(f)=\frac{b-a}{2} \sum_{i=1}^{7} w_{i} f\left(\frac{(b-a) x_{i}+a+b}{2}\right)=5 \sum_{i=1}^{7} w_{i} f\left(5 x_{i}+5\right)
+$$
+
+The $x_i$ are the roots of the Legendre polynomial of degree 7:
+$$
+P_{7}(x)=\frac{1}{16}\left(429 x^{7}-693 x^{5}+315 x^{3}-35 x\right)
+$$
+
+They can be calculated using `polyroot` in R:
+```{r}
+# Find roots of Legendre polynomial of degree 7:  1/16 * (429*x^7 - 693*x^5 + 315*x^3 - 35*x)
+(xb <- sort(Re(polyroot(1/16 * c(0, -35, 0, 315, 0, -693, 0, 429)))))
+```
+
+The weights can then be derived using the same method outlined in (a):
+$$
+\textbf{w}=X^{-1} \textbf{y}
+$$
+
+The $X$ matrix is determined as in (a), and each $y_i$ is $(1^i-(-1)^i)/i$.
+
+```{r}
+Xb_matrix <- matrix(nrow = n, ncol = n)
+yb <- vector(mode = "numeric", length = n)
+for (i in 1:n) {
+  Xb_matrix[i,] <- xb^(i-1)
+  yb[i] <- (1^i-(-1)^i)/i
+}
+(wb <- solve(Xb_matrix) %*% yb)   # Find weights by solving X-inverse times y
+
+#leg <- gauss.quad(n = 7, kind = "legendre")   #Alternative way to get weights and nodes
+```
+
+As mentioned above, we can now approximate the integral with:
+$$
+Q_{7}^{G L}(f)=5 \sum_{i=1}^{7} w_{i} f\left(5 x_{i}+5\right)
+$$
+
+```{r}
+(Q1b <- (b-a)/2 * sum(wb * prob1afunc(((b-a)*xb + a + b)/2)))
+```
 
 
 ## (c)
 
 Which of the above approximations is better? Decide by approximating $I$ using the R function `integrate`.
+
+```{r}
+(Q1c <- integrate(prob1afunc, lower = a, upper = b))
+(Q1a-Q1c$value)/Q1c$value   #Relative error between Newton-Cotes and integrate()
+(Q1b-Q1c$value)/Q1c$value   #Relative error between Gauss-Legendre and integrate()
+```
+We can see that Gauss-Legendre of $n=7$ is better in this case; its relative error is less than 0.0003.  Newton-Cotes of $n=7$ has a relative error over 0.006, more than an order of magnitude larger.
 
 
 ## (d)
@@ -105,6 +169,43 @@ $$
 $$
 using the Gauss–Laguerre quadrature rule of orders $n = 10$ and $100$. Compare your answers with the one obtained using `integrate`.
 
+We must perform a change of variables to get the integral into proper Gauss-Laguerre format.  Let $t=x-1$, so $dt=dx$ and $x=t+1$.  The integral then becomes:
+$$
+\int_{1}^{\infty} \frac{x+1}{x^{4}} d x=\int_{0}^{\infty} \frac{t+2}{(t+1)^{4}} d t=\int_{0}^{\infty} t^{0} e^{-t} e^{t} \frac{t+2}{(t+1)^{4}} d t
+$$
+$$
+=\int_{0}^{\infty} t^{0} e^{-t} f(t) d t \quad \text { where } \quad f(t)=e^{t} \frac{t+2}{(t+1)^{4}}
+$$
+
+We can then define the original function and the Gauss-Legere function:
+```{r}
+prob1dorig <- function(x) { return( (x+1) / x^4 ) }   # Define function to be integrated
+prob1dfunc <- function(t) { return( exp(t)*(t+2) / (t+1)^4 ) }   # Define function for Gauss-Laguerre
+```
+
+We can get the weights and nodes for Gauss-Laguerre using the R function `gauss.quad`:
+```{r}
+lag10 <- gauss.quad(n = 10, kind = "laguerre", alpha = 0)   #Get weights and nodes
+lag100 <- gauss.quad(n = 100, kind = "laguerre", alpha = 0)   #Get weights and nodes
+```
+
+And now we can calculate the integral approximation using:
+$$
+Q_{n}^{G L}=\sum_{i=1}^{n} w_{i} f\left(x_{i}\right)
+$$
+
+```{r}
+(Q1d_n10 <- sum(lag10$weights * prob1dfunc(lag10$nodes)))   #For n=10
+(Q1d_n100 <- sum(lag100$weights * prob1dfunc(lag100$nodes)))   #For n=100
+```
+
+And comparing with `integrate`:
+```{r}
+(Q1d <- integrate(prob1dorig, lower = 1, upper = Inf))
+(Q1d_n10-Q1d$value)/Q1d$value   #Relative error between Gauss-Laguerre, n=10, and integrate()
+(Q1d_n100-Q1d$value)/Q1d$value   #Relative error between Gauss-Laguerre, n=100, and integrate()
+```
+As expected, the higher value for $n$ provides a more accurate approximation.  For $n=100$, the relative error is less than 0.000004, whereas $n=10$ sees a relative error just under 0.002.  This is roughly 3 orders of magnitude difference!
 
 
 \pagebreak
@@ -112,7 +213,7 @@ using the Gauss–Laguerre quadrature rule of orders $n = 10$ and $100$. Compare
 # 2. 
 
 Browse the article: Lesaffre, E. and Spiessens, B. (2001), On the Effect of the Number of
-Quadrature Points in a Logistic Random–Effects Model: An Example, Applied Statistics,
+Quadrature Points in a Logistic Random–Effects Model: An Example, *Applied Statistics*,
 50, 325-335. This article deals with a randomized, double–blind, parallel–group, multicenter
 study involved 294 patients to compare two oral treatments (denoted A and B) for toenail
 infection. Patients were evaluated at week 0 (baseline) and at weeks 4, 8, 12, 24, 36, and
@@ -125,73 +226,71 @@ code and time of evaluation from the start (in months).
 
 Let $Y_{ij}$ denote the binary response of the $i^{th}$ patient in the $j^{th}$ visit, $i = 1,...,294$ and $j = 1,...,7$. A possible model for these data is the following generalized linear mixed model: 
 
-$$ Y_{ij}|\gamma_i \overset{\mathrm{ind}}\sim  Ber(\pi_{ij}(\beta,\gamma_i))$$
+$$ Y_{ij}|\gamma_i \overset{\mathrm{ind}}\sim  Ber(\pi_{ij}(\boldsymbol{\beta},\gamma_i))$$
 $$\gamma_i \overset{\mathrm{i.i.d.}}\sim N(0,\sigma^2),     i = 1,...,294; j = 1,...,7$$
 
 where
 
-$$ \pi_{i,j}(\beta, \gamma_i) = P_\beta(Y_{ij} = 1 | \gamma_i,x_{ij}) =\frac{exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij}*trt_i+\gamma_i)}{1+exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij}*trt_i+\gamma_i)}  $$
-$\beta = (\beta_0,\beta_1,\beta_2,\beta_3)$ are unknown parameters and $x_{ij} = (trt_i, t_{ij} )$ are known covariates, with
-$trt_i$ the treatment indicator of patient i (= 1 if patient i received treatment B, = 0 otherwise), and $t_{ij}$ is the time from the start of treatment of the $j^{th}$ visit for the $i^{th}$ patient.
+$$ \pi_{i,j}(\boldsymbol{\beta}, \gamma_i) = P_\beta(Y_{ij} = 1 | \gamma_i,\boldsymbol{x}_{ij}) =\frac{exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij} \cdot trt_i+\gamma_i)}{1+exp(\beta_0 +\beta_1trt_i +\beta_2t_{ij}+\beta_3t_{ij} \cdot trt_i+\gamma_i)}  $$
+$\boldsymbol{\beta} = (\beta_0,\beta_1,\beta_2,\beta_3)$ are unknown parameters and $\boldsymbol{x}_{ij} = (trt_i, t_{ij} )$ are known covariates, with
+$trt_i$ the treatment indicator of patient $i$ (= 1 if patient $i$ received treatment B, = 0 otherwise), and $t_{ij}$ is the time from the start of treatment of the $j^{th}$ visit for the $i^{th}$ patient.
 
 
 ## (a) 
 
-Compute the MLE of  $$\eta = (\beta_0', \sigma^2)$$  and their approximate standard errors. You may either
-adapt to the above model the code in the handout for the mixed effect model for count data,or else use the function glmer in the R package lme4.
+Compute the MLE of  $$\boldsymbol{\eta} = (\boldsymbol{\beta_0}', \sigma^2)$$  and their approximate standard errors. You may either
+adapt to the above model the code in the handout for the mixed effect model for count data,or else use the function `glmer` in the R package `lme4`.
 
-The Likelihood function must derived in order to find the MLE. 
+The likelihood function must bederived in order to find the MLE:
 
-$$ L(\beta, Y) = P_\beta(Y) = \int_{I\!R^{294}} P(Y,\gamma)d\gamma = \int_{I\!R^{294}} P(Y|\gamma)P(\gamma)d\gamma$$
+$$ L(\boldsymbol{\beta}, Y) = P_\beta(Y) = \int_{I\!R^{294}} P(Y,\gamma)d\gamma = \int_{I\!R^{294}} P(Y|\gamma)P(\gamma)d\gamma$$
 
-By independence
+By independence,
 
 $$= \int_{I\!R^{294}} \prod^{294}_{i=1} P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
-Integrand is product of one variable functions
-
+Integrand is product of one-variable functions:
 
 $$= \prod^{294}_{i=1} \int_{-\infty}^{\infty} P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
 
-$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  P(Y_i|\gamma_i)P(\gamma_i)d\gamma_i$$
-
 $$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}[P(Y_{ij}|\gamma_i)]P(\gamma_i)d\gamma_i$$
-Recall Bernoulli PMF and standardized normal PDF
+Recall Bernoulli PMF and standardized normal PDF:
 
 $$Bernoulli: f(x) = p^x(1-p)^{1-x}$$
 $$Normal: f(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$$
 
 Recall Gauss-Hermite quadrature form:
 
-$$\int_{-\infty}^{\infty}e^{-x^2}f(x)dx \approx \sum_i^nw_if(x_i)$$
-Plug back into equation
+$$\int_{-\infty}^{\infty}e^{-x^2}f(x)dx \approx \sum_{i=1}^n w_if(x_i)$$
+Plug back into equation:
 
-$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma})d\gamma_i$$
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{{Y_{ij}}} (1-p)^{1-Y_{ij}})\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma})d\gamma_i$$
 
-where 
+where:
 
-$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = \frac{1}{\sigma\sqrt{2\pi}}\int_{-\infty}^xe^{-(\frac{\gamma_i}{\sigma})^2/2}dt$$
-with u- substitution 
+$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = \frac{1}{\sigma\sqrt{2\pi}}\int_{-\infty}^xe^{- \bigl( \frac{\gamma_i}{\sigma} \bigr)^2 /2}  dt$$
+with u-substitution:
 
 $$u_i = \frac{\gamma_i}{\sigma\sqrt2} ~~~~~~~~~~~~~~~~~ du_i = \frac{1}{{\sigma\sqrt2}}d\gamma_i  $$
-ends up with
+resulting in:
 
-$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = e^{u{_i}^2}du_i$$
-Now plug back into equation again to obtain final Likelihood equation
+$$\frac{1}{\sigma}\phi(\frac{\gamma_i}{\sigma}) = e^{-u{_i}^2}du_i$$
+Now plug back into equation again to obtain final likelihood equation:
 
-$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})e^{u{_i}^2}du_i$$
-and log likelihood is
+$$= \prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}})e^{-u{_i}^2}du_i$$
+and log likelihood is:
 
 
-$$l = log(\prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}})e^{u{_i}^2}du_i)$$
+$$l = log(\prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}})e^{-u{_i}^2}du_i)$$
 Now put in Gauss-Hermite form: 
 
-$$=\int_{-\infty}^{\infty}e^{-u_{i}^2}f(\beta,y_i,\sigma\sqrt2u_i)du_i \approx \sum_i^nw_if(\beta,y_i,\sigma\sqrt2u_i)$$
-where 
+$$=\int_{-\infty}^{\infty}e^{-u_{i}^2}f(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i)du_i \approx \sum_i^nw_if(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i)$$
+where:
 
-$$f(\beta,y_i,\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}}) $$
+$$f(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}}) $$
 
+## (b) 
 
-## (b) Interpret the results.
+Interpret the results.
 
 \pagebreak
 
@@ -204,4 +303,151 @@ $$f(\beta,y_i,\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{_{ij}}(1-p)^{1-Y_{ij}}) $$
 
 # 4.
 
+Let $X$ be a random variable with “triangular” distribution on $(2a, 2b)$, with $a < b$, whose pdf is
+$$
+f(x)=\left\{\begin{array}{ll}
+0 & \text { if } x<2 a \text { or } x>2 b \\
+\frac{x-2 a}{(b-a)^{2}} & \text { if } 2 a \leq x<a+b \\
+\frac{2 b-x}{(b-a)^{2}} & \text { if } a+b \leq x \leq 2 b
+\end{array}\right.
+$$
 
+
+## (a)
+
+Compute the corresponding cdf $F(x)$.
+
+Here is a sketch of $f(x)$:  
+![](Hw1_4a.jpeg)
+
+We first compute the integral of $f(x)$ on the interval $2a \leq x < a+b$, which will correspond to $F(x)$ over that same range:
+
+$$
+\int_{2 a}^{x} \frac{t-2 a}{(b-a)^{2}} dt=\frac{1}{(b-a)^{2}} \int_{2 a}^{x} (t-2 a) d t=\frac{1}{(b-a)^{2}}\left[\frac{1}{2} t^{2}-2 a t\right]_{2 a}^{x}
+$$
+$$
+=\frac{1}{(b-a)^{2}}\left(\frac{1}{2} x^{2}-2 a x-\left(2 a^{2}-4 a^{2}\right)\right)=\frac{1}{(b-a)^{2}}\left(\frac{1}{2} x^{2}-2 a x+2 a^{2}\right)
+$$
+
+Plugging $x = a+b$, the upper bound of this region, into the equation above indeed gives $\frac{1}{2}$, as we would expect from the sketch, because the PDF is symmetric about this point.
+
+We now compute the integral of $f(x)$ on the interval $a+b \leq x \leq 2b$, which will be added to $\frac{1}{2}$ to give $F(x)$ over that range:
+
+$$
+\int_{a+b}^{x} \frac{2 b-t}{(b-a)^{2}} d t=\frac{1}{(b-a)^{2}} \int_{a+b}^{x} (2 b-t) d t=\frac{1}{(b-a)^{2}}\left[2 b t-\frac{1}{2} t^{2}\right]_{a+b}^{x}
+$$
+$$
+=\frac{1}{(b-a)^{2}}\left(2 b x-\frac{1}{2} x^{2}-\left(2 a b+2 b^{2}-\frac{1}{2}(a+b)^{2}\right)\right)=\frac{1}{(b-a)^{2}}\left(2 b x-\frac{1}{2} x^{2}-2 a b-2 b^{2}+\frac{1}{2} a^{2}+a b+\frac{1}{2} b^{2}\right)
+$$
+
+$$
+=\frac{1}{(b-a)^{2}}\left(-\frac{1}{2} x^{2}+2 b x+\frac{1}{2} a^{2}-a b-\frac{3}{2} b^{2}\right)
+$$
+
+This results in a final formula for $F(x)$ as follows:
+$$
+F(x)=\left\{\begin{array}{lll}
+0 & , \text { if } x<2 a \\
+\frac{1}{(b-a)^{2}}\left(\frac{1}{2} x^{2}-2 a x+2 a^{2}\right) & , \text { if } 2 a \leq x<a+b \\
+\frac{1}{2}+\frac{1}{(b-a)^{2}}\left(-\frac{1}{2} x^{2}+2 b x+\frac{1}{2} a^{2}-a b-\frac{3}{2} b^{2}\right) & , \text { if } a+b \leq x<2 b \\
+1 & , \text { if } x \geq 2 b
+\end{array}\right.
+$$
+
+
+## (b)
+
+Compute $Q(u)$, the quantile function corresponding to $F$.
+
+We begin with a sketch of $F(x)$:  
+![](Hw1_4b.jpeg)
+
+$Q(u)$ appears to have two regions, divided at $x=a+b$ (where $u=\frac{1}{2}$).  We should be able to invert $F(x)$ in parts to get the equations for $Q$.  For the first, we have:
+
+$$
+u=\frac{1}{(b-a)^{2}}\left(\frac{1}{2} x^{2}-2 a x+2 a^{2}\right)
+$$
+$$
+u(b-a)^{2}-2 a^{2}=\frac{1}{2} x^{2}-2 a x
+$$
+
+$$
+2u (b-a)^{2}-4 a^{2}=x^{2}-4 a x
+$$
+Add $4a^2$ to both sides:
+$$
+2u(b-a)^{2}=(x-2 a)^{2}
+$$
+$$
+\pm (b-a) \sqrt{2 u}=x-2 a
+$$
+$$
+x=2 a \pm(b-a) \sqrt{2 u}
+$$
+
+We know $2a$ is the lower bound of where $F(x)$ is neither 0 nor 1, so we can drop the minus sign from the $\pm$.  
+<br>
+Next we invert the second equation from $F(x)$:
+$$
+u=\frac{1}{2}+\frac{1}{(b-a)^{2}}\left(-\frac{1}{2} x^{2}+2 b x+\frac{1}{2} a^{2}-a b-\frac{3}{2} b^{2}\right)
+$$
+$$
+-2\left(u-\frac{1}{2}\right)(b-a)^{2}+a^{2}-2 a b-3 b^{2}=x^{2}-4 b x
+$$
+Add $4b^2$ to both sides:
+$$
+-2\left(u-\frac{1}{2}\right)(b-a)^{2}+(b-a)^{2}=(x-2 b)^{2}
+$$
+$$
+(b-a)^{2}(2-2 u)=(x-2 b)^{2}
+$$
+$$
+\pm(b-a) \sqrt{2-2 u}=x-2 b
+$$
+$$
+2 b \pm(b-a) \sqrt{2-2 u}=x
+$$
+Similarly, we know $2b$ is the upper bound of where $F(x)$ is neither 0 nor 1, so we can drop the plus sign from the $\pm$.  
+<br>
+That gives us a final equation for $Q(u)$ of:
+$$
+Q(u)=\left\{\begin{array}{ll}
+2 a+(b-a) \sqrt{2 u} & \text { , if } 0<u \leq \frac{1}{2} \\
+2 b-(b-a) \sqrt{2-2 u} & \text { , if } \frac{1}{2}<u<1
+\end{array}\right.
+$$
+
+As a quick sanity check, plugging $u=\frac{1}{2}$ into either equation gives $a+b$ as expected.  Similarly, $u=0$ yields $2a$ and $u=1$ yields $2b$.
+
+
+## (c)
+
+Write an R function that simulates a random sample from this distribution using the inversion method. The function arguments must be $m =$ the number of required draws and the parameters $a$ and $b$. Use your function to simulate one random sample of size 10000 from the triangular distribution on (2,8), and assess the adequacy of the simulation using a suitable graph.
+
+```{r}
+rtriangular <- function(m, a, b) {
+  # The function arguments must be m = the number of required draws and the parameters a and b.
+  u <- runif(m)
+  Q <- ifelse(u < 0.5, 2*a + (b-a)*sqrt(2*u), 2*b - (b-a)*sqrt(2-2*u))
+  return(Q)
+}
+
+a <- 2/2
+b <- 8/2
+set.seed(1)
+samp <- rtriangular(10000, a, b)   # Simulate one random sample of size 10000 from the triangular distribution on (2, 8) = (2a, 2b)
+hist(samp, probability = TRUE, ylim = c(0,0.35), main = "10,000 draws from Triangular distribution on (2,8)", xlab = "")
+lines(density(samp), col = 2)
+
+tri_pdf <- function(x, a, b) {
+  # The PDF of the triangular distribution
+  f <- ifelse(x<2*a | x>2*b, 0, ifelse(x<a+b, (x-2*a)/(b-a)^2, (2*b-x)/(b-a)^2) )
+  return(f)
+}
+
+range <- seq(from = 2*a, to = 2*b, by = 0.01)
+lines(x = range, y = tri_pdf(range, a, b), col = 4)   #Add actual PDF curve
+legend("topright", legend = c("Sample density", "Actual PDF"), lty = 1, col = c(2,4), )
+```
+
+This sampling approach does quite well.  The histogram has the correct triangular shape, and the sample density (in <span style="color: red;">red</span>) approaches the actual PDF (in <span style="color: blue;">blue</span>).
