@@ -1,0 +1,127 @@
+---
+title: 'STA 6133: Homework 2'
+author: "Ricardo Cortez & Ben Graf"
+date: "Due 26 Feb 2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(pacman, statmod, lme4, stats)
+```
+
+# 1. 
+
+Consider the integral
+$$
+I=\int_{0}^{10} \exp \left(\frac{-1}{1+x^{2}}\right) d x
+$$
+
+## (a)
+
+Approximate $I$ using the Newton–Cotes quadrature rule of order $n = 7$. 
+
+Newton-Cotes is defined by:
+$$
+Q_{7}^{NC}=\sum_{i=1}^{7} w_{i} f\left(x_{i}\right)
+$$
+The $x_i$ are defined by the following equation:
+$$
+x_{i}=a+(i-1)(b-a)/(n-1), \quad i=1, \ldots, n, \quad a=0, \quad b=10, \quad n=7
+$$
+
+```{r}
+n <- 7
+a <- 0
+b <- 10
+(xa <- seq(from = a, to = b, by = (b-a)/(n-1)))
+```
+
+The computation of $Q_{7}^{NC}$ can be done by noting that the Newton–Cotes rule of order $n$ is exact for any polynomial of degree less than or equal to $n−1$:
+$$
+Q_{7}^{NC}(p)=\sum_{i=1}^{7} w_{i} p\left(x_{i}\right)=\int_{0}^{10} p(x) d x, \quad p(x)=x^{j}, \quad j=0, \ldots, n-1
+$$
+
+The quadrature weights then satisfy the system of equations below:
+$$
+\left\{\begin{array}{l}
+w_{1}+w_{2}+w_{3}+w_{y}+w_{5}+w_{6}+w_{7}=10 \\
+0 w_{1}+\frac{5}{3} w_{2}+\frac{10}{3} w_{3}+\frac{15}{3} w_{4}+\frac{20}{3} w_{5}+\frac{25}{3} w_{6}+10 w_{7}=\frac{10^{2}}{2}=50 \\
+...\\
+...\\
+0 w_{1}+\left(\frac{5}{3}\right)^{6} w_{2}+\left(\frac{10}{3}\right)^{6} w_{3}+\left(\frac{15}{3}\right)^{6} w_{4}+\left(\frac{20}{3}\right)^{6} w_{5}+\left(\frac{25}{3}\right)^{6} w_{6}+10^{6} w_{7}=\frac{10^{7}}{7}
+\end{array}\right.
+$$
+
+This can be rewritten as $X\textbf{w} = \textbf{y}$ where X is the coefficients, $\textbf{w}$ is the weights, and $\textbf{y}$ is the terms to the right of the equal sign.  The solution for $\textbf{w}$ is therefore:
+$$
+X^{-1} X \textbf{w}=X^{-1} \textbf{y} \quad \Rightarrow \quad \textbf{w}=X^{-1} \textbf{y}
+$$
+```{r}
+# Set up X matrix and y vector
+Xa_matrix <- matrix(nrow = n, ncol = n)
+ya <- vector(mode = "numeric", length = n)
+for (i in 1:n) {
+  Xa_matrix[i,] <- xa^(i-1)
+  ya[i] <- (b-a)^i/i
+}
+
+(wa <- solve(Xa_matrix) %*% ya)   # Find weights by solving X-inverse times y
+```
+
+We can then approximate the integral using the Newton-Cotes equation above.
+$$
+Q_{7}^{NC}=\sum_{i=1}^{7} w_{i} f\left(x_{i}\right)
+$$
+
+```{r}
+prob1afunc <- function(x) { return( exp(-1/(1+x^2)) ) }   # Define function to be integrated
+
+(Q1a <- sum(wa * prob1afunc(xa)))
+```
+
+
+
+
+
+## (b)
+
+Approximate $I$ using using a Gauss quadrature rule of order $n = 7$.
+
+
+## (c)
+
+Which of the above approximations is better? Decide by approximating $I$ using the R function `integrate`.
+
+
+## (d)
+
+Approximate the integral
+$$
+\int_{1}^{\infty} \frac{x+1}{x^{4}} d x
+$$
+using the Gauss–Laguerre quadrature rule of orders $n = 10$ and $100$. Compare your answers with the one obtained using `integrate`.
+
+
+
+\pagebreak
+
+
+# 2. 
+
+
+\pagebreak
+
+
+# 3.
+ 
+
+\pagebreak
+
+
+# 4.
+
+
