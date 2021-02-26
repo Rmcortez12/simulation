@@ -176,7 +176,7 @@ $$
 $$
 =\int_{0}^{\infty} t^{0} e^{-t} f(t) d t \quad \text { where } \quad f(t)=e^{t} \frac{t+2}{(t+1)^{4}}
 $$
-
+Note the exponent of the term $t$ in the integral is $\alpha = 0$.  
 We can then define the original function and the Gauss-Legere function:
 ```{r}
 prob1dorig <- function(x) { return( (x+1) / x^4 ) }   # Define function to be integrated
@@ -295,11 +295,10 @@ $$f(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{{Y_{
 and 
 
 $$
-p = \pi_{i,j}(\beta,\gamma_i)~~~~~~~~~~~~~~~~~ from~ above
+p = \pi_{i,j}(\boldsymbol{\beta},\gamma_i)~~~~~~~~~~~~~~~~~ from~ above
 $$
 
-Now we can start to find the MLE of $\eta$ by maximizing the log-likelihood equation, utilizing the optim function in base-r. As the notes mention the evaluation of each summand in the log-likelihood requires an approximation of the integral over the real line. The implementation of that approximation and the resulting solution is as follows:
-
+Now we can start to find the MLE of $\boldsymbol{\eta}$ by maximizing the log-likelihood equation, utilizing the `optim` function in `base-r`. As the notes mention, the evaluation of each summand in the log-likelihood requires an approximation of the integral over the real line. The implementation of that approximation and the resulting solution is as follows:
 ```{r}
 library(statmod)
 library(data.table)
@@ -349,8 +348,8 @@ b <- gauss.quad(n = 100, kind = "hermite")
 
 # Function to approximate the negative log-likelihood, using Gauss-Hermite quadrature
 
-# statistical packages usually work at minimizing functions
-# so in order to find the maximum of a function we need to find the min of the negative of that function 
+# Statistical packages usually work at minimizing functions, so in order to find the
+# maximum of a function we need to find the minimum of the negative of that function 
 # because max(x) = min(-x)
 
 neg_loglik_appx <- function(eta, data) {
@@ -395,7 +394,7 @@ se
 
 Interpret the results.
 
-From the Table and plot below we can see as the weeks increase, as well as if the treatment is present the presence of a toenail infection is reduced. 
+From the table below, we see that $\beta_1$ is the only parameter whose 95% confidence interval straddles 0, making it at first appear that the treatment is insignificant.  However, $\beta_3$, related to the interaction of treatment and time, *is* significant, meaning that the treatment effect is being masked by the interaction term.  Based on this, we can declare all parameters to be significant at 95%.  The plot below demonstrates that, as time passes, probability of the presence of toenail infection goes down regardless of treatment, but the probability *with* treatment is lower for every amount of time. 
 ```{r}
 #create 95% Confidence intervals
 lower_bound <- est-1.96*se
@@ -412,13 +411,13 @@ p_bernoulli <- function(eta,  trti, txi) {
   a <- eta[1] + eta[2]*trti + eta[3]*txi + eta[4]*txi*trti
   return(exp(a)/(1+exp(a)))
 }
-p_ber_1 <- p_bernoulli(est,1,1:7)
-p_ber_0 <- p_bernoulli(est,0,1:7)
-plot(1:7*4,p_ber_0,type = "l",ylab = "Probability of Toenail Infection Presence",xlab = "Week")
-lines(1:7*4,p_ber_1,col=3)
-points(1:7*4,p_ber_0,)
-points(1:7*4,p_ber_1,col=3)
-legend(20,.105,c("Treatment", "No Treatment"), lty = c(1,1),col = c(3,1))
+p_ber_1 <- p_bernoulli(est,1,0:7)
+p_ber_0 <- p_bernoulli(est,0,0:7)
+plot(0:7*4, p_ber_0,type = "l", ylab = "Probability of Toenail Infection Presence", xlab = "Week", ylim = c(0,0.18))
+lines(0:7*4,p_ber_1,col=3)
+points(0:7*4,p_ber_0,)
+points(0:7*4,p_ber_1,col=3)
+legend(20,.105,c("No Treatment", "Treatment"), lty = c(1,1),col = c(1,3))
 ```
 
 
