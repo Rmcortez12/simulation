@@ -177,7 +177,7 @@ $$
 =\int_{0}^{\infty} t^{0} e^{-t} f(t) d t \quad \text { where } \quad f(t)=e^{t} \frac{t+2}{(t+1)^{4}}
 $$
 Note the exponent of the term $t$ in the integral is $\alpha = 0$.  
-We can then define the original function and the Gauss-Legere function:
+We can then define the original function and the Gauss-Laguerre function:
 ```{r}
 prob1dorig <- function(x) { return( (x+1) / x^4 ) }   # Define function to be integrated
 prob1dfunc <- function(t) { return( exp(t)*(t+2) / (t+1)^4 ) }   # Define function for Gauss-Laguerre
@@ -241,7 +241,7 @@ $trt_i$ the treatment indicator of patient $i$ (= 1 if patient $i$ received trea
 Compute the MLE of  $$\boldsymbol{\eta} = (\boldsymbol{\beta_0}', \sigma^2)$$  and their approximate standard errors. You may either
 adapt to the above model the code in the handout for the mixed effect model for count data,or else use the function `glmer` in the R package `lme4`.
 
-The likelihood function must bederived in order to find the MLE:
+The likelihood function must be derived in order to find the MLE:
 
 $$ L(\boldsymbol{\beta}, Y) = P_\beta(Y) = \int_{I\!R^{294}} P(Y,\gamma)d\gamma = \int_{I\!R^{294}} P(Y|\gamma)P(\gamma)d\gamma$$
 
