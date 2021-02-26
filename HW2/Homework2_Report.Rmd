@@ -426,6 +426,79 @@ legend(20,.105,c("No Treatment", "Treatment"), lty = c(1,1),col = c(1,3))
 
 # 3.
  
+Let F be an arbitrary cumulative distribution function on R that is continuous and strictly
+increasing.
+
+## (a)
+
+Write an R function that simulates a random sample from F by finding a root of an
+appropriate function. The function arguments must be m = the number of required draws
+and F, a continuous and strictly increasing cdf.
+
+Given the constraints above there exists a real number for which F(x) = y, so the root of G(x) = F(x) - y would give us that real Number, the simulation function is below, we've also included an optional interval vector. 
+
+```{r}
+
+sim <- function(F,m,interval=c(-100,100)){
+  # The function arguments must be m = the number of required draws,
+  # and F, a continuous and strictly increasing cdf.
+  # Added a third optional variable, interval, which is the interval over which to evaluate F (needed for root-finding).
+  #   interval should be formatted as a length-2 vector as seen in the default value in the function definition.
+  
+  F.inv <- function(y){uniroot(function(x){F(x)-y},interval=interval)$root}
+  F.inv <- Vectorize(F.inv) #need to vectorize for uniroot to work
+
+  X <- runif(m,0,1)   # random sample from U[0,1]
+  Z <- F.inv(X)    #Calculate inverse CDF using root-finding for each draw from Uniform(0,1)
+
+  return(Z) 
+}
+
+
+```
+
+## (b)
+
+Use your function to simulate one random sample of size 10000 from the Gamma(3, 1)
+distribution, and one random sample of size 10000 from the Gamma(0.3, 1) distribution.
+Assess the adequacy of your output by overlaying in the same plot the histogram of your
+output and the density of the distribution.
+
+From the plots below we can see the output displayed by the historgrams very closelly resembles the density of the distribution passed to the function. 
+
+```{r}
+
+m <- 10000
+
+gamma_3_1 <- function(x) { return(pgamma(x, shape = 3, scale = 1)) }   #CDF of Gamma(3,1)
+set.seed(1)
+output_1 <- sim(m = m, F = gamma_3_1, interval = c(0,100))
+hist(output_1, probability = TRUE, ylim = c(0,0.3), main = "Random sampling from Gamma(3,1)", xlab = "x")
+range_1 <- seq(from = 0, to = 12, by = 0.01)
+lines(x = range_1, y = dgamma(range_1, shape = 3, scale = 1), col = 2)   #Add actual density curve
+
+gamma_03_2 <- function(x) { return(pgamma(x, shape = 0.3, scale = 1)) }   #CDF of Gamma(0.3,1)
+set.seed(1)
+output_2 <- sim(m = m, F = gamma_03_2, interval = c(0,100))
+hist(output_2, probability = TRUE, main = "Random sampling from Gamma(0.3,1)", xlab = "x")
+range_2 <- seq(from = 0, to = 6, by = 0.01)
+lines(x = range_2, y = dgamma(range_2, shape = 0.3, scale = 1), col = 2)   #Add actual density curve
+
+```
+
+## (c)
+
+Plot the quantile function of the Gamma(3, 1) distribution against an empirical quantile
+function of the simulated data (read Examples 3.2 and 3.8 in the textbook).
+
+Notice as our sample increases, we begin to deviate from the normal line as expected in the gamma family.  
+
+```{r}
+q <- qgamma(ppoints(m), shape = 3, scale = 1)   # Quantile points for true density
+qqplot(q, output_1, cex = 0.5, xlab = "Gamma(3,1)", ylab = "Sample")
+abline(0,1)
+
+```
 
 \pagebreak
 
