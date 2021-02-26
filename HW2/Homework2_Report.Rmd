@@ -10,7 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-pacman::p_load(pacman, statmod, lme4, stats)
+pacman::p_load(pacman, statmod, lme4, stats, data.table)
 ```
 
 # 1. 
@@ -300,9 +300,6 @@ $$
 
 Now we can start to find the MLE of $\boldsymbol{\eta}$ by maximizing the log-likelihood equation, utilizing the `optim` function in `base-r`. As the notes mention, the evaluation of each summand in the log-likelihood requires an approximation of the integral over the real line. The implementation of that approximation and the resulting solution is as follows:
 ```{r}
-library(statmod)
-library(data.table)
-
 # Import data
 d <- read.table("http://faculty.business.utsa.edu/vdeolive/toenail.txt",header=FALSE)
 names(d) <- c("patient", "response", "treatment", "time", "visit")
@@ -426,19 +423,18 @@ legend(20,.105,c("No Treatment", "Treatment"), lty = c(1,1),col = c(1,3))
 
 # 3.
  
-Let F be an arbitrary cumulative distribution function on R that is continuous and strictly
+Let F be an arbitrary cumulative distribution function on $\mathbb{R}$ that is continuous and strictly
 increasing.
 
 ## (a)
 
-Write an R function that simulates a random sample from F by finding a root of an
-appropriate function. The function arguments must be m = the number of required draws
-and F, a continuous and strictly increasing cdf.
+Write an R function that simulates a random sample from $F$ by finding a root of an
+appropriate function. The function arguments must be $m =$ the number of required draws
+and $F$, a continuous and strictly increasing cdf.
 
-Given the constraints above there exists a real number for which F(x) = y, so the root of G(x) = F(x) - y would give us that real Number, the simulation function is below, we've also included an optional interval vector. 
+Given the constraints above, for any $y \in (0,1)$ there exists a real number $x$ for which $F(x) = y$, so the root of $G(x) = F(x) - y$ would give us that real number.  This effectively allows us to find $F^{-1}$ via these roots.  The simulation function is below.  It includes an optional interval input variable that can be used if the range of $x$ is unusual.
 
 ```{r}
-
 sim <- function(F,m,interval=c(-100,100)){
   # The function arguments must be m = the number of required draws,
   # and F, a continuous and strictly increasing cdf.
@@ -453,8 +449,6 @@ sim <- function(F,m,interval=c(-100,100)){
 
   return(Z) 
 }
-
-
 ```
 
 ## (b)
@@ -464,7 +458,7 @@ distribution, and one random sample of size 10000 from the Gamma(0.3, 1) distrib
 Assess the adequacy of your output by overlaying in the same plot the histogram of your
 output and the density of the distribution.
 
-From the plots below we can see the output displayed by the historgrams very closelly resembles the density of the distribution passed to the function. 
+From the plots below we can see the output displayed by the histograms very closely resembles the density of the distribution passed to the function. 
 
 ```{r}
 
@@ -491,7 +485,7 @@ lines(x = range_2, y = dgamma(range_2, shape = 0.3, scale = 1), col = 2)   #Add 
 Plot the quantile function of the Gamma(3, 1) distribution against an empirical quantile
 function of the simulated data (read Examples 3.2 and 3.8 in the textbook).
 
-Notice as our sample increases, we begin to deviate from the normal line as expected in the gamma family.  
+Notice that higher-valued samples show some deviation from the diagonal, though this does not appear overly problematic, especially considering the two most extreme values *are* close to the diagonal.
 
 ```{r}
 q <- qgamma(ppoints(m), shape = 3, scale = 1)   # Quantile points for true density
