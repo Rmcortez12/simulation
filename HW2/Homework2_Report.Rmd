@@ -281,16 +281,146 @@ and log likelihood is:
 
 
 $$l = log(\prod^{294}_{i=1} \int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}})e^{-u{_i}^2}du_i)$$
+
+$$ = \sum^{294}_{i=1}log(\int_{-\infty}^{\infty}  \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}})e^{-u{_i}^2}du_i))$$
+
 Now put in Gauss-Hermite form: 
 
 $$=\int_{-\infty}^{\infty}e^{-u_{i}^2}f(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i)du_i \approx \sum_i^nw_if(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i)$$
+
 where:
 
 $$f(\boldsymbol{\beta},\boldsymbol{y_i},\sigma\sqrt2u_i) = \prod^7_{j=1}(p^{{Y_{ij}}}(1-p)^{1-Y_{ij}}) $$
 
+and 
+
+$$
+p = \pi_{i,j}(\beta,\gamma_i)~~~~~~~~~~~~~~~~~ from~ above
+$$
+
+Now we can start to find the MLE of $\eta$ by maximizing the log-likelihood equation, utilizing the optim function in base-r. As the notes mention the evaluation of each summand in the log-likelihood requires an approximation of the integral over the real line. The implementation of that approximation and the resulting solution is as follows:
+
+```{r}
+library(statmod)
+library(data.table)
+
+# Import data
+d <- read.table("http://faculty.business.utsa.edu/vdeolive/toenail.txt",header=FALSE)
+names(d) <- c("patient", "response", "treatment", "time", "visit")
+
+# A quick observation of the data makes it clear that some data is missing
+# Create a patient_count variable in the dataset to denote this is the nth patient, 
+# rather than using their IDs, which have gaps
+cur_patient <- 0
+pat_count <- 0
+d$patient_count <- vector(mode = "numeric", length = nrow(d))
+for (index in 1:nrow(d)) {
+  if (d[index,]$patient != cur_patient) {
+    cur_patient <- d[index,]$patient
+    pat_count <- pat_count + 1
+  }
+  d[index,]$patient_count <- pat_count
+}
+
+
+# We are interested in approximating the log-likelihood using numerical integration methods
+
+# Function to compute f(beta, yi, trti, txi, sqrt(2)*sigma*u)
+f <- function(u, eta, yi, trti, txi) {
+  # u is a transformation of gammai; gammai = sqrt(2)*sigma*u (scalar)
+  # eta is a length 5 list with beta_0, beta_1,beta_2,beta_3,sigma
+  # trti is treatment indicator (scalar)
+  # txi is time from the start of treatment of the jth visit for the ith patient (vector of length 7 or fewer)
+  # yi is the response for the ith patient at each visit (vector of same length as txi)
+
+  a <- eta[1] + eta[2]*trti + eta[3]*txi + eta[4]*txi*trti + sqrt(2)*eta[5]*u
+  p <- exp(a)/(1+exp(a))
+  return( prod(p^yi * (1-p)^(1-yi)) ) 
+}
+
+
+
+fv <- Vectorize(f, vectorize.args = "u")   #This allows for many values of u to be submitted to f at once 
+                                           #and evaluated in vector form, rather than a loop
+
+# Compute the points and weights of for the Gauss-Hermite quadrature
+b <- gauss.quad(n = 100, kind = "hermite")
+
+
+# Function to approximate the negative log-likelihood, using Gauss-Hermite quadrature
+
+# statistical packages usually work at minimizing functions
+# so in order to find the maximum of a function we need to find the min of the negative of that function 
+# because max(x) = min(-x)
+
+neg_loglik_appx <- function(eta, data) {
+  # eta = (beta_0, beta_1, beta_2, beta_3, sigma)
+  # data = full data set (includes at least response, treatment, time, patient_count)
+  # b = dataframe with weights and nodes (Hermite), exists outside this function
+
+  # Approximate the integral for each patient
+  n <- length(unique(data$patient_count))
+  integral_appx <- c()
+  for (pat in 1:n) {
+    the_rows <- which(data$patient_count == pat)
+    yi <- data[the_rows,]$response
+    trti <- data[the_rows[1],]$treatment
+    txi <- data[the_rows,]$time
+    integral_appx[pat] <- sum(b$weights * fv(b$nodes, eta, yi, trti, txi))
+  }
+  
+  # Combine all patients with negative sum of logs
+  return(-sum(log(integral_appx)))
+}
+
+
+# Now optimize to find the MLE
+# This may take a while so be patient :) 
+eta0 <- c(0, 0, 0, 0, 1) # Initial values
+ml <- optim(eta0, neg_loglik_appx, data = d, method = "L-BFGS-B",
+            lower = c(-Inf, -Inf, -Inf, -Inf, 0), 
+            upper = c(Inf, Inf, Inf, Inf, Inf), hessian = TRUE)
+
+## Maximum likelihood estimates of beta_0, beta_1, beta_2, beta_3, and sigma
+est <- ml$par
+est
+## Approximate standard errors of the ML estimators
+se<-sqrt(diag(solve(ml$hessian)))
+se
+
+```
+
+
 ## (b) 
 
 Interpret the results.
+
+From the Table and plot below we can see as the weeks increase, as well as if the treatment is present the presence of a toenail infection is reduced. 
+```{r}
+#create 95% Confidence intervals
+lower_bound <- est-1.96*se
+upper_bound <- est+1.96*se
+dt <- data.table(c("beta_0", "beta_1", "beta_2", "beta_3", "sigma"),est,lower_bound,upper_bound)
+dt
+
+p_bernoulli <- function(eta,  trti, txi) {
+  # u is a transformation of gammai; gammai = sqrt(2)*sigma*u (scalar)
+  # eta is a length 5 list with beta_0, beta_1,beta_2,beta_3,sigma
+  # trti is treatment indicator (scalar)
+  # txi is time from the start of treatment of the jth visit for the ith patient (vector of length 7 or fewer)
+  
+  a <- eta[1] + eta[2]*trti + eta[3]*txi + eta[4]*txi*trti
+  return(exp(a)/(1+exp(a)))
+}
+p_ber_1 <- p_bernoulli(est,1,1:7)
+p_ber_0 <- p_bernoulli(est,0,1:7)
+plot(1:7*4,p_ber_0,type = "l",ylab = "Probability of Toenail Infection Presence",xlab = "Week")
+lines(1:7*4,p_ber_1,col=3)
+points(1:7*4,p_ber_0,)
+points(1:7*4,p_ber_1,col=3)
+legend(20,.105,c("Treatment", "No Treatment"), lty = c(1,1),col = c(3,1))
+```
+
 
 \pagebreak
 
