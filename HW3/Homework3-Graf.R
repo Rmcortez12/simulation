@@ -186,7 +186,45 @@ theo_var_w
 samp_var_w <- matrix(data = 0, nrow = 3, ncol = 3)
 for (k in 1:iter3) {
   mat <- samp3[[k]]
-  samp_var_w <- samp_var_w + (mat - samp_mean_w)^2/iter3
+  samp_var_w <- samp_var_w + (mat - samp_mean_w)^2/(iter3-1)
 }
 samp_var_w
+
+
+#### 4 ####
+
+# (a)
+
+pnorm(2)
+pnorm(1)
+(p <- 1-pnorm(2)+pnorm(1))   # p = P(X^2 - 3X +2 > 0) = P(X>2) + P(X<1)
+
+# (b)
+
+M <- 2e6
+set.seed(1)
+x <- rnorm(M)
+test_x <- ifelse(x^2 -3*x + 2 > 0, 1, 0)
+mean(test_x)   # Monte Carlo approximation of p
+3*sd(test_x)/sqrt(M)   # (Likely) upper bound for estimation error
+
+# (c)
+
+qnorm(0.0013)
+thresh <- -0.001/qnorm(0.0013)
+
+#test_rollsum <- cumsum(test_x)
+test_rollavg <- c()
+test_rollerr <- c()
+for (i in 1065001:1700000) {
+  test_rollavg[i-1065000] <- mean(test_x[1:i])
+  test_rollerr[i-1065000] <- sd(test_x[1:i])/sqrt(i)
+  print(paste(i,test_rollerr[i-1065000]))
+  if ((i>3) & (test_rollerr[i-1065000] < thresh)) {break}
+}
+plot(test_rollavg, type = "l")
+plot(test_rollerr, type = "l")
+print(paste0("The test error dropped below the threshold of ",thresh," after ",i," iterations with a value of ",test_rollerr[i-1065000],"."))
+
+
 
