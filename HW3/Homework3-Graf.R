@@ -105,8 +105,88 @@ legend("topright", c("Sample density", "Theoretical density"), lty = 1, col = c(
 range2[which(vM == max(vM))]   # Theoretical mode, should = theta_2
 
 
+#### 3 ####
 
+# (a)
 
+# Generate m draws from Wishart_d(sigma, n) distribution using Johnson algorithm
+rwish <- function(m, n, sigma) {
+  # m = number of required draws
+  # n = degrees of freedom
+  # sigma = covariance matrix
+  
+  d <- nrow(sigma)
+  
+  values <- list()
+  
+  for (reps in 1:m) {
 
+    # Calculate values for T matrix in a d^2 length vector
+    Tvals <- c()
+    for (i in 1:d) {
+      for (j in 1:d) {
+        index <- (j-1)*d + i
+        if (i>j) {
+          Tvals[index] <- rnorm(n = 1, mean = 0, sd = 1)
+        } else if (i==j) {
+          Tvals[index] <- sqrt(rchisq(n = 1, df = n-i+1))
+        } else {
+          Tvals[index] <- 0
+        }
+      }
+    }
+    
+    T <- matrix(data = Tvals, nrow = d, ncol = d, byrow = FALSE)   # Convert vector into dxd matrix
+    
+    A <- T %*% t(T)   # TT' is Wishart_d(I_d, n)
+    
+    R <- chol(sigma)   # R is upper triangular Choleski decomposition
+    L <- t(R)   # L is lower triangular, transpose of R
+    
+    values[[reps]] <- L %*% A %*% R   # LAL' is Wishart_d(sigma, n)
+  
+  }
+  
+  return(values)
+}
 
+# (b)
+
+# Make 1000 draws from Wishart
+iter3 <- 1000
+df <- 8
+sigma <- matrix(data = c(1, -0.5, 0.5, -0.5, 1, -0.5, 0.5, -0.5, 1), 
+                nrow = 3, ncol = 3, byrow = FALSE)
+set.seed(1)
+samp3 <- rwish(m = iter3, n = df, sigma = sigma)
+
+# (c)
+
+# Theoretical mean = df * sigma:
+(theo_mean_w <- df*sigma)
+
+# Sample mean:
+samp_mean_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (k in 1:iter3) {
+  mat <- samp3[[k]]
+  samp_mean_w <- samp_mean_w + mat/iter3
+}
+samp_mean_w
+
+# Theoretical variance Var_ij = df * (sigma_ij^2 + sigma_ii * sigma_jj):
+theo_var_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (i in 1:3) {
+  for (j in 1:3) {
+    theo_var_w[i,j] <- df * (sigma[i,j]^2 + sigma[i,i] * sigma[j,j])
+  }
+}
+theo_var_w
+
+# Sample variance:
+samp_var_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (k in 1:iter3) {
+  mat <- samp3[[k]]
+  samp_var_w <- samp_var_w + (mat - samp_mean_w)^2/iter3
+}
+samp_var_w
 
