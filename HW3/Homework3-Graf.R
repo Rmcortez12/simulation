@@ -221,7 +221,7 @@ thresh <- -delta/Z
 set.seed(1)
 x <- rnorm(2*M)
 test_x <- ifelse(x^2 -3*x + 2 > 0, 1, 0)
-for (i in 1064001:1066000) {
+for (i in 1065001:1066000) {
   test_err <- sd(test_x[1:i])/sqrt(i)
   #print(paste(i,test_err))
   if (test_err < thresh) {break}
