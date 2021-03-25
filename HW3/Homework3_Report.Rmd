@@ -1,0 +1,262 @@
+---
+title: 'STA 6133: Homework 3'
+author: "Ricardo Cortez & Ben Graf"
+date: "Due 26 Mar 2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(pacman)
+```
+
+# 1. 
+
+## (a)
+
+
+## (b)
+
+
+## (c)
+
+
+\pagebreak
+
+# 2. 
+
+## (a) 
+
+
+## (b) 
+
+
+## (c)
+
+
+\pagebreak
+
+
+# 3.
+ 
+Read the section in the textbook describing the Wishart distribution.  
+
+## (a)
+
+For $n \ge d+1 \le 1\ (n,d \in N)$ and $\Sigma$ is a $d \times d$ symmetric positive definite matrix, write an `R` function to simulate from the $W_d(\Sigma,n)$ distribution using the algorithm described in the textbook. The function arguments should be $m$ (= number of required draws), $n$ (= degrees of freedom) and $\Sigma$.
+
+The algorithm from the textbook (p.93) is, briefly:  
+Let $T=(T_{ij})$ be a lower triangular $d \times d$ random matrix with:
+
+* $T_{ij} \stackrel{iid}{\sim} N(0,1),\ i > j$
+* $T_{ii} \sim \sqrt{\chi^2 (n-i+1)},\ i=1,...,d$
+
+Then $A=TT^T$ has a $W_d(I_d,n)$ distribution.  Obtain Choleski factorization $\Sigma=LL^T$, where $L$ is lower triangular.  Then $LAL^T \sim W_d(\Sigma,n)$.
+
+Our `R` implementation follows:
+```{r}
+# Generate m draws from Wishart_d(sigma, n) distribution using Johnson algorithm
+rwish <- function(m, n, sigma) {
+  # m = number of required draws
+  # n = degrees of freedom
+  # sigma = covariance matrix
+  
+  d <- nrow(sigma)
+  
+  values <- list()
+  
+  for (reps in 1:m) {
+
+    # Calculate values for T matrix in a d^2 length vector
+    Tvals <- c()
+    for (i in 1:d) {
+      for (j in 1:d) {
+        index <- (j-1)*d + i
+        if (i>j) {
+          Tvals[index] <- rnorm(n = 1, mean = 0, sd = 1)
+        } else if (i==j) {
+          Tvals[index] <- sqrt(rchisq(n = 1, df = n-i+1))
+        } else {
+          Tvals[index] <- 0
+        }
+      }
+    }
+    
+    T <- matrix(data = Tvals, nrow = d, ncol = d, byrow = FALSE)   # Convert vector into dxd matrix
+    
+    A <- T %*% t(T)   # TT' is Wishart_d(I_d, n)
+    
+    R <- chol(sigma)   # R is upper triangular Choleski decomposition
+    L <- t(R)   # L is lower triangular, transpose of R
+    
+    values[[reps]] <- L %*% A %*% R   # LAL' is Wishart_d(sigma, n)
+  
+  }
+  
+  return(values)
+}
+```
+
+
+## (b)
+
+Get a random sample of size 1000 from the $W_3(\Sigma,8)$ distribution, where
+$$
+\Sigma=\left(\begin{array}{ccc}
+1 & -0.5 & 0.5 \\
+-0.5 & 1 & -0.5 \\
+0.5 & -0.5 & 1
+\end{array}\right)
+$$
+
+The code below makes 1000 random draws from the requested distribution:
+```{r}
+# Make 1000 draws from Wishart
+iter3 <- 1000
+df <- 8
+sigma <- matrix(data = c(1, -0.5, 0.5, -0.5, 1, -0.5, 0.5, -0.5, 1), 
+                nrow = 3, ncol = 3, byrow = FALSE)
+set.seed(1)
+samp3 <- rwish(m = iter3, n = df, sigma = sigma)
+```
+
+## (c)
+
+Look for the formulas of the means and variances of the entries of a random matrix with Wishart distribution (e.g. in a Multivariate Analysis book or Wikipedia). Then for the sample in (b) compare the population means and variances with the respective sample means and variances.
+
+We first compare the theoretical and sample means.  From Wikipedia, the theoretical mean of a $W_d(\Sigma,n)$ distribution is $n\Sigma$.
+```{r}
+# Theoretical mean = df * sigma:
+(theo_mean_w <- df*sigma)
+
+# Sample mean:
+samp_mean_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (k in 1:iter3) {
+  mat <- samp3[[k]]
+  samp_mean_w <- samp_mean_w + mat/iter3
+}
+samp_mean_w
+```
+Our sample mean does a good job of approximating the theoretical mean.  The biggest relative error for any element is 1.8%.  
+<br>Next we compare the theoretical and sample variances.  From Wikipedia, the theoretical variance of a $W_d(\Sigma,n)$ distribution is $n (\sigma_{ij}^2 + \sigma_{ii} \sigma_{jj})$.
+```{r}
+# Theoretical variance Var_ij = df * (sigma_ij^2 + sigma_ii * sigma_jj):
+theo_var_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (i in 1:3) {
+  for (j in 1:3) {
+    theo_var_w[i,j] <- df * (sigma[i,j]^2 + sigma[i,i] * sigma[j,j])
+  }
+}
+theo_var_w
+
+# Sample variance:
+samp_var_w <- matrix(data = 0, nrow = 3, ncol = 3)
+for (k in 1:iter3) {
+  mat <- samp3[[k]]
+  samp_var_w <- samp_var_w + (mat - samp_mean_w)^2/(iter3-1)
+}
+samp_var_w
+```
+The sample variance is in the right ballpark, but it is not as accurate an estimate of the theoretical variance as we saw for the mean.  The largest relative error for any element is 8.4%, not great.  Increasing the number of draws can improve this (tested but not shown here).
+
+\pagebreak
+
+
+# 4.
+
+Let $p = P(X^2−3X+2 > 0)$ where $X \sim N(0,1)$.
+
+## (a)
+
+Find the ‘exact’ value of $p$.
+
+We first note that:
+$$p =  P(X^2−3X+2 > 0) = P((X-2)(X-1) > 0)$$
+
+This product is only greater than 0 if both terms have the same sign.  So, either $X-2>0$ and $X-1>0$, which implies $X>2$ &nbsp; *or* &nbsp; $X-2<0$ and $X-1<0$, which implies $X<1$.
+
+Therefore, 
+$$p = P(X>2) + P(X<1) = 1 - P(X<2) + P(X<1)$$
+
+This is calculated below:
+```{r}
+(p <- 1-pnorm(2)+pnorm(1))   # p = P(X^2 - 3X +2 > 0) = P(X>2) + P(X<1)
+```
+$\textbf{p = 0.8641}$
+
+## (b)
+
+Compute a Monte Carlo approximation of $p$ based on $10^6$ simulations, and compute the (likely) upper bound for the estimation error.
+
+We know from Monte Carlo theory that:
+$$
+I(h)=\int_{\mathbb{X}} h(x) f(x) d x = E_f(h(X))
+$$
+
+can be approximated by:
+$$
+\hat{I}_{n}(h)=\frac{1}{n} \sum_{i=1}^{n} h\left(x_{i}\right),\quad where\ X_{1}, X_{2}, \ldots, X_{n} \stackrel{iid}{\sim} f(x)
+$$
+In our case, $h(x) = I(X^2−3X+2 > 0)$ and $X \sim N(0,1)$.  The code to carry out this approximation follows:
+```{r}
+M <- 1e6
+set.seed(1)
+x <- rnorm(M)
+test_x <- ifelse(x^2 -3*x + 2 > 0, 1, 0)
+mean(test_x)   # Monte Carlo approximation of p
+3*sd(test_x)/sqrt(M)   # (Likely) upper bound for estimation error
+```
+After one million Monte Carlo draws, we find a highly accurate $\boldsymbol{\hat{p} = 0.86407}$, matching the first 4 digits of $p$ exactly!  The (likely) upper bound for the estimation error is **0.001**, also quite good.
+
+## (c)
+
+Let $\delta$ be a small positive number and $\hat{p}_n$ a Monte Carlo approximation of $p$ based on $n$ simulations. Find the smallest value of $n$ for which the probability that $\hat{p}_n$ will be within $\delta$ of the unknown $p$ is about 0.9974. What is $n$ when $\delta = 0.001$?
+
+The problem described above is asking us to solve the following equation for $n$:
+$$
+P\left(\mid p-\hat{p}_{n} \mid < \delta\right)=0.9974
+$$
+We know $E(\hat{p}_n) = p$ and $Var(\hat{p}_n) = \frac{\hat{\sigma}_n^2}{n}$.  Therefore, we can manipulate the equation above to:
+$$
+P\left(\frac{-\delta}{\hat{\sigma}_{n}/\sqrt{n}} < \frac{\mid p-\hat{p}_{n} \mid}{\hat{\sigma}_{n}/\sqrt{n}} < \frac{\delta}{\hat{\sigma}_{n}/\sqrt{n}}\right) = 0.9974
+$$
+The middle term is now a standard normal ($Z \sim N(0,1)$), and symmetric, so we can again rewrite as:
+$$
+2\ P\left(Z < \frac{-\delta}{\hat{\sigma}_{n}/\sqrt{n}}\right) = 1 - 0.9974
+$$
+$$
+P\left(Z < \frac{-\delta}{\hat{\sigma}_{n}/\sqrt{n}}\right) = 0.0013
+$$
+$$
+\frac{-\delta}{\hat{\sigma}_{n}/\sqrt{n}} = -3.0115
+$$
+Solving for $n$:
+$$
+n = \frac{\hat{\sigma}_{n}^2\ (3.0115)^2}{\delta^2}
+$$
+So this provies the smallest value of $n$ for which the probability that $\hat{p}_n$ will be within $\delta$ of the unknown $p$ is about 0.9974.  It turns out that $\hat{\sigma}_{n}^2$ converges as $n$ grows large. We can pull the value from our MC simulation in part (b) above and plug in $\delta = 0.001$ to find $n$ in this scenario:
+```{r}
+# Calculate n
+(var_est <- var(test_x))
+delta <- 0.001
+(Z <- qnorm(0.0013))
+(n <- var_est * (Z / delta)^2)
+```
+With $\delta = 0.001$, $\textbf{n = 1,065,146}$.  We can examine our MC simulation to confirm that the actual $n$ is near the theoretical one, though we have to increase the number of draws, as our simulation in (b) stopped at 1,000,000:
+```{r}
+# See where the test error crosses the threshold for this set of draws
+thresh <- -delta/Z
+set.seed(1)
+x <- rnorm(2*M)
+test_x <- ifelse(x^2 -3*x + 2 > 0, 1, 0)
+for (i in 1065001:1066000) {
+  test_err <- sd(test_x[1:i])/sqrt(i)
+  #print(paste(i,test_err))
+  if (test_err < thresh) {break}
+}
+print(paste0("The test error dropped below the threshold of ",thresh," after ",i," iterations with a value of ",test_err,"."))
+```
+We see that the actual $n$ is 1,065,576, giving a relative error of 0.04%, very accurate!
