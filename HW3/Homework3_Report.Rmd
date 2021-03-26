@@ -14,27 +14,211 @@ pacman::p_load(pacman)
 ```
 
 # 1. 
+The beta-binomial distribution with parameters $n\in N$ is a discrete distribution that is often used in Bayesian analysis of count data. Its pmf is given by
+$$
+p(x) = \binom{n}{x}\frac{\Gamma(\alpha+\beta)\Gamma(x+\alpha)\Gamma(n-x+\beta)}{\Gamma(\alpha)\Gamma(\beta)\Gamma(n+\alpha+\beta)}, \quad for \  x = 0,1,...,n,
+$$
+
+(not a good looking one!). As the name suggests, this distribution arises as a beta mixture of binomials if $X|P\sim bin(n,P)$ and $P\sim beta(\alpha,\beta)$, the the marginal pmf of $X$ is $p(x)$
 
 ## (a)
+Prove the above claim. 
+$$
+P(X=x) = \int_{0}^{1} P(X=x,P=p)dp \\
+$$
+$$
+= \int_{0}^{1} P(X=x|P=p)P(P=p)dp \quad by \ Total \ Probability \\
+$$
+$$
+= \int_{0}^{1} \binom{n}{x}p^x(1-p)^{n-x}\frac{1}{B(\alpha,\beta)}p^{\alpha-1}(1-p)^{\beta-1}dp \quad plug \ in \ the \ distributions \\
+$$
+$$
+= \binom{n}{x} \frac{1}{B(\alpha,\beta)} \int_{0}^{1} p^{x+\alpha-1}(1-p)^{n-x+\beta-1}dp \quad simplify
+$$
+
+$$
+\text {use the below beta kernel to simplify even more} \\
+\beta(\alpha+x,\beta-x+n)
+$$
+$$
+\text{The earlier equation becomes }
+\\
+= \binom{n}{x} \frac{B(x+\alpha,n-x+\beta)}{B(\alpha,\beta)} \int_{0}^{1} \frac{1}{B(x+\alpha, n-x+\beta)}p^{x+\alpha-1}(1-p)^{n-x+\beta-1}dp 
+$$
+$$
+\text{ Simplified and terms rearragned}\\
+= \binom{n}{x} \frac{\Gamma(\alpha+\beta)\Gamma(x+\alpha)\Gamma(n-x+\beta)}{\Gamma(\alpha)\Gamma(\beta)\Gamma(n+\alpha+\beta)} \quad x=0,1,..,n \ 
+$$
+
+
+
 
 
 ## (b)
+Write an R function to simulate from the beta–binomial distribution, having $n,\alpha,$ and $\beta$ as arguments.
 
+```{r}
+# Function to make one draw from a beta-binomial distribution
+rbeta_bin <- function(n, alpha, beta) {
+  p <- rbeta(1, alpha, beta) #first sample from beta distribution
+  x <- sample(c(0,1), size = n, replace = TRUE, prob = c(1-p, p)) #using the draws from the beta draw, draw a binomial sample.
+  return(sum(x))
+}
+```
 
 ## (c)
+
+For $n=20, \alpha=3,\beta=2$, simulate a random sample of size 10000. Then compare the theoretical pmf, E(X) and var(X) with the respective estimates from the sample. 
+
+```{r}
+n <- 20
+alpha <- 3
+beta <- 2
+iter <- 10000
+
+#First get Theoretical Values
+
+range <- 0:20
+# PMF of beta-binomial with n=20, alpha=3, and beta=2 already known
+pmf <- function(x) {
+  value <- (x+2) * (x+1) * (21-x) / (2 * 23 * 22 * 21)
+  return(value)
+}
+theo_mean <- n*alpha / (alpha + beta)   # Theoretical mean
+theo_var <- n*alpha*beta * (alpha + beta + n) / ((alpha + beta)^2 * (alpha + beta + 1))   # Theoretical variance
+
+
+# Make 10000 draws from beta-binomial
+samp <- c()
+set.seed(1)
+for (j in 1:iter) {
+  samp[j] <- rbeta_bin(n, alpha, beta)
+}
+
+hist(samp, probability = TRUE, main = "", xlab = "x")   # Sample histogram
+lines(density(samp))   # Sample density
+
+lines(range, pmf(range), type = "l", col = "red")   # Theoretical PMF
+legend("topleft", c("Sample density", "Theoretical density"), lty = 1, col = c("black", "red"))
+
+print(paste0("Theoretical Mean: ", theo_mean))
+print(paste0("Sample Mean: ", mean(samp)))  # Sample mean
+print(paste0("Theoretical Variance: ", theo_var))
+print(paste0("Sample Variance: ", var(samp)))  # Sample Variance
+
+```
 
 
 \pagebreak
 
 # 2. 
 
+Directional data are observations of angles (e.g. wind direction). A probability model for such data is the von Mises distribution, a continuous distribution with pdf
+
+$$
+f_\theta(x) = \left\{\begin{array}{ll}
+\frac{1}{2\pi I_0(\theta_1)}e^{\theta_1cos(x-\theta_2)} & \text { if } 0  \leq \text  x <2\pi \\
+0 & \text otherwise\\
+\end{array}\right., \quad  \theta = (\theta_1,\theta_2)
+$$
+where  $\theta_1 > 0, 0 \leq\theta_2<2\pi$ and $I_0(a)=\frac{1}{2\pi}\int_0^{2\pi}e^{acos(x)}dx$ is a Bessel function. 
 ## (a) 
+Assume first that $\theta_2=0$. Write down the accept-reject algorithm to sample from this distribution as proposal density an appropriate uniform distribution. Once the above is done, how can you sample from a von Mises Distribution with $\theta_2 \neq 0$?
+
+First find the max of $f_\theta(x) \text { when } \theta_2 = 0$ by taking the derivative and setting equal to 0. It can also be verified this is a maximum by taking the second derivative (not shown)
+
+$$
+f'_\theta(x) = \frac{1}{2\pi I_0(\theta_1)}(-\theta_1sin(x)e^{\theta_1cos(x)}) = 0
+$$
+
+$$
+ = sin(x)e^{\theta_1cos(x)}=0
+$$
+This function is maximized whenever sin(x) = 0 so $x=0,2\pi$
+Now we can plug 0 back into the original function
+
+$$
+f_\theta(0) = \frac{1}{2\pi I_0(\theta_1)}e^{\theta_1cos(0)}
+\\
+=\frac{e^{\theta_1}}{2\pi I_0(\theta_1)} = fmax(\theta_1)
+$$
+
+Using the max we can now specify our algorithm. 
+
+1. Generate $Y \sim unif(0,2\pi), \text { and } U \sim unif(0, fmax(\theta_1))$
+2. Set X = Y if $0 < U < f_\theta(Y)$
+3. Otherwise Repeat
+
+In order to sample when $\theta_2 \neq 0$ we can  add the value of $\theta_2$ to each kept value of X. If $X \sim f_{\theta_1}(x) \text { then } Y =X+\theta_2$
+
 
 
 ## (b) 
 
+Write an R function that implements the algorithm in (a) to sample from $f_\theta(x)$. The arguments must be $m \in N$ and the parameters $\theta_1>0, 0\leq\theta_2<2\pi$
 
+```{r}
+
+# Calculate von Mises PDF for a given x, theta_1, and theta_2
+von_Mises <- function(x, theta_1, theta_2=0) {
+  # theta_2 defaults to 0 if no value provided
+  bessel <- integrate(function(y) {exp(theta_1 * cos(y)) / (2*pi)}, lower = 0, upper = 2*pi)
+  value <- exp(theta_1 * cos(x-theta_2)) / (2*pi*bessel$value)
+  return(value)
+}
+
+# Find maximum value of von Mises with theta_2 = 0
+fmax <- function(theta_1) {
+  bessel <- integrate(function(y) {exp(theta_1 * cos(y)) / (2*pi)}, lower = 0, upper = 2*pi)
+  value <- exp(theta_1) / (2*pi*bessel$value)
+  return(value)
+}
+
+# Generate n draws from von Mises using accept-reject algorithm
+rvon_Mises <- function(n, m, theta_1, theta_2) {
+  # n = number of draws
+  # m = maximum value the function can take, acts as upper bound for U(0,m)
+  output <- c()
+  i <- 0
+  while(i < n) {   # Keep going until n successful draws
+    y <- runif(1, min = 0, max = 2*pi)   # Draw y from unif(0,2*pi)
+    u <- runif(1, min = 0, max = m)   # Draw u from unif(0,m)
+    vm <- von_Mises(y, theta_1, 0)   # Calculate PDF at y
+    if (u < vm) {   # If u < pdf at y, then store that draw in output
+      i <- i+1
+      output[i] <- y
+    }   # Otherwise ignore this draw
+  }
+  output <- (output + theta_2) %% (2*pi)   # Shift output by theta_2 because location family
+  return(output)
+}
+```
 ## (c)
+
+Draw a random sample of size 10000 from the von Mises distribution with $\theta = (2, \pi/4)$, and assess the adequacy of the sample. 
+
+From the graph below we can see the sample is very similar on the inner ranges of 0 and $2\pi$ allowing us to conclude the sample is adequate. 
+
+```{r}
+
+# Make 10000 draws from accept-reject von Mises
+theta_1 <- 2
+theta_2 <- pi/4
+set.seed(1)
+samp2 <- rvon_Mises(n = iter, m = fmax(theta_1), theta_1 = theta_1, theta_2 = theta_2)
+hist(samp2, probability = TRUE, main = "Comparison of Theoretical and Sample Density", xlab =  "x")   # Sample histogram
+lines(density(samp2))   # Sample density
+density(samp2)$x[which(density(samp2)$y == max(density(samp2)$y))]   # Sample mode, should = theta_2
+(theta_2)
+
+# Compare with theoretical
+range2 <- seq(from = 0, to = 2*pi, by = 0.005)  
+vM <- von_Mises(x = range2, theta_1 = theta_1, theta_2 = theta_2)
+lines(range2, vM, type = "l", col = "red")   # Theoretical PDF
+legend("topright", c("Sample density", "Theoretical density"), lty = 1, col = c("black", "red"))
+range2[which(vM == max(vM))]   # Theoretical mode, should = theta_2
+
+```
 
 
 \pagebreak
