@@ -14,39 +14,39 @@ pacman::p_load(pacman)
 ```
 
 # 1. 
-The beta-binomial distribution with parameters $n\in N$ is a discrete distribution that is often used in Bayesian analysis of count data. Its pmf is given by
+The beta-binomial distribution with parameters $n\in N$ and $\alpha,\beta > 0$ is a discrete distribution that is often used in Bayesian analysis of count data. Its pmf is given by
 $$
 p(x) = \binom{n}{x}\frac{\Gamma(\alpha+\beta)\Gamma(x+\alpha)\Gamma(n-x+\beta)}{\Gamma(\alpha)\Gamma(\beta)\Gamma(n+\alpha+\beta)}, \quad for \  x = 0,1,...,n,
 $$
 
-(not a good looking one!). As the name suggests, this distribution arises as a beta mixture of binomials if $X|P\sim bin(n,P)$ and $P\sim beta(\alpha,\beta)$, the the marginal pmf of $X$ is $p(x)$
+(not a good looking one!). As the name suggests, this distribution arises as a beta mixture of binomials: If $X|P\sim bin(n,P)$ and $P\sim beta(\alpha,\beta)$, the the marginal pmf of $X$ is $p(x)$
 
 ## (a)
 Prove the above claim. 
 $$
-P(X=x) = \int_{0}^{1} P(X=x,P=p)dp \\
+P(X=x) = \int_{0}^{1} P(X=x,P=p)\ dp \\
 $$
 $$
-= \int_{0}^{1} P(X=x|P=p)P(P=p)dp \quad by \ Total \ Probability \\
+= \int_{0}^{1} P(X=x|P=p)P(P=p)\ dp \quad \text{by Total Probability} \\
 $$
 $$
-= \int_{0}^{1} \binom{n}{x}p^x(1-p)^{n-x}\frac{1}{B(\alpha,\beta)}p^{\alpha-1}(1-p)^{\beta-1}dp \quad plug \ in \ the \ distributions \\
+= \int_{0}^{1} \binom{n}{x}p^x(1-p)^{n-x}\frac{1}{B(\alpha,\beta)}p^{\alpha-1}(1-p)^{\beta-1}\ dp \quad \text{plug in the distributions} \\
 $$
 $$
-= \binom{n}{x} \frac{1}{B(\alpha,\beta)} \int_{0}^{1} p^{x+\alpha-1}(1-p)^{n-x+\beta-1}dp \quad simplify
+= \binom{n}{x} \frac{1}{B(\alpha,\beta)} \int_{0}^{1} p^{x+\alpha-1}(1-p)^{n-x+\beta-1}\ dp \quad \text{simplify}
 $$
 
 $$
-\text {use the below beta kernel to simplify even more} \\
-\beta(\alpha+x,\beta-x+n)
+\text {Use the below beta kernel to simplify even more:} \\
+beta(\alpha+x,\beta-x+n)
 $$
 $$
-\text{The earlier equation becomes }
+\text{The earlier equation becomes:}
 \\
-= \binom{n}{x} \frac{B(x+\alpha,n-x+\beta)}{B(\alpha,\beta)} \int_{0}^{1} \frac{1}{B(x+\alpha, n-x+\beta)}p^{x+\alpha-1}(1-p)^{n-x+\beta-1}dp 
+= \binom{n}{x} \frac{B(x+\alpha,n-x+\beta)}{B(\alpha,\beta)} \int_{0}^{1} \frac{1}{B(x+\alpha, n-x+\beta)}p^{x+\alpha-1}(1-p)^{n-x+\beta-1}\ dp 
 $$
 $$
-\text{ Simplified and terms rearragned}\\
+\text{The integral is over a beta distribution, so it equals 1. Simplified and terms rearranged:}\\
 = \binom{n}{x} \frac{\Gamma(\alpha+\beta)\Gamma(x+\alpha)\Gamma(n-x+\beta)}{\Gamma(\alpha)\Gamma(\beta)\Gamma(n+\alpha+\beta)} \quad x=0,1,..,n \ 
 $$
 
@@ -55,7 +55,7 @@ $$
 
 
 ## (b)
-Write an R function to simulate from the beta–binomial distribution, having $n,\alpha,$ and $\beta$ as arguments.
+Write an `R` function to simulate from the beta–binomial distribution, having $n,\alpha,$ and $\beta$ as arguments.
 
 ```{r}
 # Function to make one draw from a beta-binomial distribution
@@ -107,7 +107,7 @@ print(paste0("Theoretical Variance: ", theo_var))
 print(paste0("Sample Variance: ", var(samp)))  # Sample Variance
 
 ```
-
+It is clear that the simulation is highly accurate.  The sample density plot is very close to the pmf, and the sample mean and variance do a great job of approximating the theoretical values.
 
 \pagebreak
 
@@ -116,47 +116,54 @@ print(paste0("Sample Variance: ", var(samp)))  # Sample Variance
 Directional data are observations of angles (e.g. wind direction). A probability model for such data is the von Mises distribution, a continuous distribution with pdf
 
 $$
-f_\theta(x) = \left\{\begin{array}{ll}
+f_\boldsymbol{\theta}(x) = \left\{\begin{array}{ll}
 \frac{1}{2\pi I_0(\theta_1)}e^{\theta_1cos(x-\theta_2)} & \text { if } 0  \leq \text  x <2\pi \\
 0 & \text otherwise\\
-\end{array}\right., \quad  \theta = (\theta_1,\theta_2)
+\end{array}\right., \quad  \boldsymbol{\theta} = (\theta_1,\theta_2)
 $$
-where  $\theta_1 > 0, 0 \leq\theta_2<2\pi$ and $I_0(a)=\frac{1}{2\pi}\int_0^{2\pi}e^{acos(x)}dx$ is a Bessel function. 
+where  $\theta_1 > 0, 0 \leq\theta_2<2\pi$ and $I_0(a)=\frac{1}{2\pi}\int_0^{2\pi}e^{acos(x)}dx$ is a Bessel function.  
+
 ## (a) 
-Assume first that $\theta_2=0$. Write down the accept-reject algorithm to sample from this distribution as proposal density an appropriate uniform distribution. Once the above is done, how can you sample from a von Mises Distribution with $\theta_2 \neq 0$?
+Assume first that $\theta_2=0$. Write down the accept-reject algorithm to sample from this distribution using as proposal density an appropriate uniform distribution. Once the above is done, how can you sample from a von Mises Distribution with $\theta_2 \neq 0$?
 
-First find the max of $f_\theta(x) \text { when } \theta_2 = 0$ by taking the derivative and setting equal to 0. It can also be verified this is a maximum by taking the second derivative (not shown)
+First find the max of $f_\boldsymbol{\theta}(x) \text { when } \theta_2 = 0$ by taking the derivative and setting equal to 0: 
 
 $$
-f'_\theta(x) = \frac{1}{2\pi I_0(\theta_1)}(-\theta_1sin(x)e^{\theta_1cos(x)}) = 0
+f'_\boldsymbol{\theta}(x) = \frac{1}{2\pi I_0(\theta_1)}(-\theta_1sin(x)e^{\theta_1cos(x)}) = 0
 $$
 
 $$
  = sin(x)e^{\theta_1cos(x)}=0
 $$
-This function is maximized whenever sin(x) = 0 so $x=0,2\pi$
-Now we can plug 0 back into the original function
+This function is zero when $sin(x) = 0$, so $x=0, \pi, 2\pi$.  When $x=0 \text{ or } 2\pi$:
+$$
+f_{\boldsymbol\theta}(0)=\frac{1}{2 \pi I_{0}\left(\theta_{1}\right)} e^{\theta_{1} \cos (0)}=\frac{e^{\theta_{1}}}{2 \pi I_{0}\left(\theta_{1}\right)}
+$$
+Similarly, when $x=\pi$:
+$$
+f_{\boldsymbol\theta}(\pi)=\frac{e^{-\theta_{1}}}{2 \pi I_{0}\left(\theta_{1}\right)}
+$$
+Clearly, the former is a maximum and the latter is a minimum for positive $\theta_1$.  Therefore we define:
 
 $$
-f_\theta(0) = \frac{1}{2\pi I_0(\theta_1)}e^{\theta_1cos(0)}
-\\
-=\frac{e^{\theta_1}}{2\pi I_0(\theta_1)} = fmax(\theta_1)
+f_{max}(\theta_1)=\frac{e^{\theta_1}}{2\pi I_0(\theta_1)}
 $$
 
-Using the max we can now specify our algorithm. 
+Using the maximum, we can now specify our algorithm. 
 
-1. Generate $Y \sim unif(0,2\pi), \text { and } U \sim unif(0, fmax(\theta_1))$
-2. Set X = Y if $0 < U < f_\theta(Y)$
-3. Otherwise Repeat
+1. Generate $Y \sim unif(0,2\pi), \text { and } U \sim unif(0, f_{max}(\theta_1))$
+2. Set $X = Y$ if $0 < U < f_\boldsymbol{\theta}(Y)$
+3. Otherwise repeat
 
-In order to sample when $\theta_2 \neq 0$ we can  add the value of $\theta_2$ to each kept value of X. If $X \sim f_{\theta_1}(x) \text { then } Y =X+\theta_2$
+In order to sample when $\theta_2 \neq 0$, we can  add the value of $\theta_2$ to each kept value of $X$ because this distribution is a location family. If $X \sim f_{\theta_1}(x) \text { then } Y =X+\theta_2 \sim f_\boldsymbol{\theta}(x)$
 
 
 
 ## (b) 
 
-Write an R function that implements the algorithm in (a) to sample from $f_\theta(x)$. The arguments must be $m \in N$ and the parameters $\theta_1>0, 0\leq\theta_2<2\pi$
-
+Write an R function that implements the algorithm in (a) to sample from $f_\boldsymbol{\theta}(x)$. The arguments must be $m \in \mathbb{N}$ and the parameters $\theta_1>0,\ 0\leq\theta_2<2\pi$.  
+  
+Our function follows:
 ```{r}
 
 # Calculate von Mises PDF for a given x, theta_1, and theta_2
@@ -195,9 +202,7 @@ rvon_Mises <- function(n, m, theta_1, theta_2) {
 ```
 ## (c)
 
-Draw a random sample of size 10000 from the von Mises distribution with $\theta = (2, \pi/4)$, and assess the adequacy of the sample. 
-
-From the graph below we can see the sample is very similar on the inner ranges of 0 and $2\pi$ allowing us to conclude the sample is adequate. 
+Draw a random sample of size 10000 from the von Mises distribution with $\boldsymbol{\theta} = (2, \pi/4)$, and assess the adequacy of the sample. 
 
 ```{r}
 
@@ -208,18 +213,20 @@ set.seed(1)
 samp2 <- rvon_Mises(n = iter, m = fmax(theta_1), theta_1 = theta_1, theta_2 = theta_2)
 hist(samp2, probability = TRUE, main = "Comparison of Theoretical and Sample Density", xlab =  "x")   # Sample histogram
 lines(density(samp2))   # Sample density
-density(samp2)$x[which(density(samp2)$y == max(density(samp2)$y))]   # Sample mode, should = theta_2
-(theta_2)
+samp_mode <- density(samp2)$x[which(density(samp2)$y == max(density(samp2)$y))]   # Sample mode, should = theta_2
 
 # Compare with theoretical
 range2 <- seq(from = 0, to = 2*pi, by = 0.005)  
 vM <- von_Mises(x = range2, theta_1 = theta_1, theta_2 = theta_2)
 lines(range2, vM, type = "l", col = "red")   # Theoretical PDF
 legend("topright", c("Sample density", "Theoretical density"), lty = 1, col = c("black", "red"))
-range2[which(vM == max(vM))]   # Theoretical mode, should = theta_2
-
+theo_mode <- range2[which(vM == max(vM))]   # Theoretical mode, should = theta_2
+print(paste0("Theoretical Mode: ", theo_mode))
+print(paste0("Sample Mode: ", samp_mode))
+print(paste0("Theta_2: ", theta_2))
 ```
-
+The histogram matches the theoretical pdf quite well.  The plot of the sample density misses a bit at the edges of the graph, but this is due to the periodic nature of the pdf.  The sample density plot is trying to smooth its values down to 0 near 0 and $2\pi$ because there are no sample results outside these values, nor should there be.  The theoretical pdf, on the other hand, is discontinuous at 0 and $2\pi$.  Given these caveats, we believe the sample adequately approximates the distribution.  
+We also compare the theoretical and sample modes, which should equal $\theta_2$.  Here again, the sample does fairly well considering the range of the distribution.  (We use the mode because, while we can also easily calculate the sample mean and variance, their theoretical counterparts are troublesome to calculate due to the offset period.)
 
 \pagebreak
 
@@ -382,7 +389,7 @@ $$
 
 can be approximated by:
 $$
-\hat{I}_{n}(h)=\frac{1}{n} \sum_{i=1}^{n} h\left(x_{i}\right),\quad where\ X_{1}, X_{2}, \ldots, X_{n} \stackrel{iid}{\sim} f(x)
+\hat{I}_{n}(h)=\frac{1}{n} \sum_{i=1}^{n} h\left(x_{i}\right),\quad \text{where } X_{1}, X_{2}, \ldots, X_{n} \stackrel{iid}{\sim} f(x)
 $$
 In our case, $h(x) = I(X^2−3X+2 > 0)$ and $X \sim N(0,1)$.  The code to carry out this approximation follows:
 ```{r}
@@ -421,7 +428,7 @@ Solving for $n$:
 $$
 n = \frac{\hat{\sigma}_{n}^2\ (3.0115)^2}{\delta^2}
 $$
-So this provies the smallest value of $n$ for which the probability that $\hat{p}_n$ will be within $\delta$ of the unknown $p$ is about 0.9974.  It turns out that $\hat{\sigma}_{n}^2$ converges as $n$ grows large. We can pull the value from our MC simulation in part (b) above and plug in $\delta = 0.001$ to find $n$ in this scenario:
+So this provides the smallest value of $n$ for which the probability that $\hat{p}_n$ will be within $\delta$ of the unknown $p$ is about 0.9974.  It turns out that $\hat{\sigma}_{n}^2$ converges as $n$ grows large. We can pull the value from our MC simulation in part (b) above and plug in $\delta = 0.001$ to find $n$ in this scenario:
 ```{r}
 # Calculate n
 (var_est <- var(test_x))
