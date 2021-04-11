@@ -1,3 +1,5 @@
+library(nimble)
+
 ####1a
 #function to get phat estimate
 
@@ -82,3 +84,52 @@ plot(mus,n.power)
 plot(mus,c.power)
 plot(mus,u.power)
 plot(mus,e.power)
+
+
+#######2
+#a
+# our estimators are xbar, Median, and alphaTrimmed
+
+#need a list of theta's
+#for each theta we're going to need an JXM matrix of samples from each distribution 
+#J is the number of draws in the sample
+#M is the simulation size
+
+# MSE = 1/M* Sum(T(x) -g(theta))^2
+
+#n=30, m= 100000
+
+AllMSE.f <- function(n,theta,M){
+  nM <- n*M
+  
+  sim_norm <- matrix(rnorm(nM,theta,3), ncol = M)
+  sim_dexp <- matrix(rdexp(nM,theta,sqrt(3/2)), ncol = M)
+  sim_t <- matrix(rt(nM,df=3,ncp=theta), ncol = M)  
+  
+  n.estimates <- matrix(estimator.f(sim_norm),ncol = 3)
+  dexp.estimates <- matrix(estimator.f(sim_dexp),ncol = 3)
+  t.estimates <- matrix(estimator.f(sim_t),ncol=3)
+  
+  #the 2 tells apply to apply the function to the columns (independent samples)
+  n.mse<- apply(n.estimates,2,MSE.f,theta=theta)
+  dexp.mse<-apply(dexp.estimates,2,MSE.f,theta=theta)
+  t.mse <-apply(t.estimates,2,MSE.f,theta=theta)
+  res <- rbind(n.mse,dexp.mse,t.mse)
+  return(res)
+  
+}
+
+estimator.f <- function(x){
+  estimateXbar <- apply(x,2,mean)
+  estimateMedian <- apply(x,2,median)
+  estimateAlpha <- apply(x,2,mean,trim=0.1)
+  return(c("EstimateXbar" = estimateXbar, "EstimateMedian" = estimateMedian,"EstimateAlpha" = estimateAlpha))
+}
+MSE.f <- function(estimate,theta){
+  MSE<- mean(estimate^2)-2*theta*mean(estimate)+theta^2
+  return(MSE)
+}
+
+MSEs <- AllMSE.f(30,theta = 0,1000)
+colnames(MSEs) <- c("Xbar","Median","TrimmedMean")
+MSEs
