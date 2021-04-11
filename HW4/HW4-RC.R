@@ -162,3 +162,86 @@ colnames(MixMSE) <- c("Xbar","Median","TrimmedMean")
 MixMSE
 
 
+#####3
+library(lawstat) #needed for levene.test
+n1<-n2 <- 10
+n3<-20
+alpha <- 0.05
+m <- 10000
+#dists
+#normal(0,sig)
+#exp()
+
+
+#bart's test is one x,y where x is all values and y is the sample they come from
+library(data.table)
+samp1<- data.table("x" = rnorm(10,0,1), "y" = "samp1")
+samp2<- data.table("x" = rnorm(10,0,1), "y" = "samp2")
+samp3<- data.table("x" = rnorm(20,0,1), "y" = "samp3")
+all <- rbind(samp1,samp2,samp3)
+b<- bartlett.test(x~y, data = all)
+b$p.value
+#this is oddly similar to number 1??
+
+
+phat.f3 <- function(n,m=10000,dist,std){
+  #n - number of draws from distribution [vector]
+  #m - number of samples drawn from distribution
+  #dist - Distribution in question, if no spec given do all distributions
+  #std - null std deviation values
+  #std1 - alt std deviationvalues
+  
+  p<-numeric(m)
+  
+  #loop through the columns (individual samples) to get the estimate for that sample
+  for (j in 1:m){
+    simdata <- data.table(x=numeric(),y=numeric())
+    for(i in 1:length(n)){
+      if(dist=="norm"){
+        data<-rnorm(n[i],0,sqrt(std[i]))
+      }else if (dist=="t"){
+        data <- rt(n[i],3,0)*sqrt(std[i])
+      }else if (dist == "e"){
+        data <- rexp(n[i],sqrt(std[i]))
+      }
+      simdata <- rbind(data.table(x = data,y = i),simdata)
+    }
+    b <- bartlett.test(x~y, data = simdata)
+    p[j] <- b$p.value
+  }
+  
+  #this will sum up the True/(Total)
+  phat.05 <- mean(p<.05)
+  #add relative error and size columns
+  #keep this seperate b/c return is truncating the numbers 
+  
+  #power for number 1b
+  
+  
+  return(c("alpha05" = phat.05))
+}
+
+n.null.1 <- phat.f3(c(10,10,20),10000,"norm",c(1,1,1))
+n.null.10 <- phat.f3(c(10,10,20),10000,"norm",c(10,10,10))
+
+t.null.1 <- phat.f3(c(10,10,20),10000,"t",c(1,1,1))
+t.null.10 <- phat.f3(c(10,10,20),10000,"t",c(10,10,10))
+
+e.null.1 <- phat.f3(c(10,10,20),10000,"e",c(1,1,1))
+e.null.10 <- phat.f3(c(10,10,20),10000,"e",c(10,10,10))
+
+(sig_levels <- rbind(n.null.1,n.null.10,t.null.1,t.null.10,e.null.1,e.null.10))
+
+
+#Power
+
+n.alt1 <- phat.f3(c(10,10,20),10000,"norm",c(1,1,3))
+n.alt2 <- phat.f3(c(10,10,20),10000,"norm",c(1,2,6))
+
+t.alt1 <- phat.f3(c(10,10,20),10000,"t",c(1,1,3))
+t.alt2 <- phat.f3(c(10,10,20),10000,"t",c(1,2,6))
+
+e.alt1 <- phat.f3(c(10,10,20),10000,"e",c(1,1,3))
+e.alt2 <- phat.f3(c(10,10,20),10000,"e",c(1,2,6))
+
+(sig_levels <- rbind(n.alt1,n.alt2,t.alt1,t.alt2,e.alt1,e.alt2))
