@@ -102,7 +102,7 @@ plot(mus,e.power)
 AllMSE.f <- function(n,theta,M){
   nM <- n*M
   
-  sim_norm <- matrix(rnorm(nM,theta,3), ncol = M)
+  sim_norm <- matrix(rnorm(nM,theta,9), ncol = M)
   sim_dexp <- matrix(rdexp(nM,theta,sqrt(3/2)), ncol = M)
   sim_t <- matrix(rt(nM,df=3,ncp=theta), ncol = M)  
   
@@ -130,6 +130,35 @@ MSE.f <- function(estimate,theta){
   return(MSE)
 }
 
-MSEs <- AllMSE.f(30,theta = 0,1000)
+MSEs <- AllMSE.f(30,theta = 0,100000)
 colnames(MSEs) <- c("Xbar","Median","TrimmedMean")
 MSEs
+
+
+###2b
+# looks similar but the only difference is the how the random matrix is built
+# 100*(1-e) % comes from N and the rest comes from t3
+n <- 30
+M <- 1000
+
+e <- .1
+
+theta <- 0
+
+mix.f <- function(n,M,e,theta){
+  ne <- (1-e)
+  a<-rnorm(n*M*ne,theta,9)
+  b<-rt(n*M*e,df=3,ncp=theta)
+  sim <- matrix(append(a,b),ncol=M)
+  estimates <- matrix(estimator.f(sim), ncol=3)
+  sim.mse <- apply(estimates,2,MSE.f,theta=theta)
+return(sim.mse)
+}
+
+MixMSE.1 <- mix.f(30,100000,.1,theta)
+MixMSE.3 <- mix.f(30,100000,.3,theta)
+MixMSE <- rbind(MixMSE.1,MixMSE.3)
+colnames(MixMSE) <- c("Xbar","Median","TrimmedMean")
+MixMSE
+
+
