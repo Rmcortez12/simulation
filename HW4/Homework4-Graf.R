@@ -154,7 +154,7 @@ M <- 10000
 
 # (a)
 
-groups <- c(rep(1,length(group1)), rep(2,length(group2)), rep(3,length(group3)))
+groups <- c(rep(1,n[1]), rep(2,n[2]), rep(3,n[3]))
 bart.test <- function(vec, groups, alpha) {
   return(bartlett.test(vec ~ groups)$p.value < alpha)   # If p-value < alpha, reject null hypothesis
 }
