@@ -218,7 +218,7 @@ phat.f3 <- function(n,m=10000,dist,std){
   #power for number 1b
   
   
-  return(c("alpha05" = phat.05))
+  return(c("alpha" = phat.05))
 }
 
 n.null.1 <- phat.f3(c(10,10,20),10000,"norm",c(1,1,1))
@@ -245,3 +245,40 @@ e.alt1 <- phat.f3(c(10,10,20),10000,"e",c(1,1,3))
 e.alt2 <- phat.f3(c(10,10,20),10000,"e",c(1,2,6))
 
 (sig_levels <- rbind(n.alt1,n.alt2,t.alt1,t.alt2,e.alt1,e.alt2))
+
+
+
+######4
+data.4 <- c(3,5,7,18,43,85,91,98,100,130,230,487)
+
+
+#We are drawing these bootstrap samples from an exp(u) sample where u is the rate MLE of exp (xbar)
+#   remember though we need 'B' data samples each containing n samples 
+xbar <- mean(data.4)
+n <- length(data.4)
+B <- 10000
+set.seed(1)
+sampleData <- rexp(n*B,1/xbar)
+#put this sample data into matrix format that breaks all the data into B samples made of n entries
+sampleMat <- matrix(sampleData,nrow = n,ncol = B)
+
+T.samp <- 1/apply(sampleMat, 2, mean)   # M draws from bootstrap distribution of g(mu)=1/mu
+hist(T.samp)
+(bias_est <- mean(T.samp) - (1/xbar))
+(sd_est <- sd(T.samp))
+
+#b 
+# Exact confidence intervals
+# xbar dist is gamma(n,u/n)
+(low <- xbar/qgamma(.90,n,1/n))
+(high <- xbar/qgamma(.10,n,1/n))
+(a.value <- sum(sampleData>5,na.rm = T)/length(sampleData))
+
+#Parametric Asymptotic 
+(low.a <- xbar - qnorm(.1)*xbar/sqrt(n))
+(high.a <- xbar + qnorm(.1)*xbar/sqrt(n))
+
+
+#bootstrap
+v <- quantile(T.samp, probs = c(0.9, 0.1))
+c(2*mean(data.4) - v[1], 2*mean(data.4) - v[2])
