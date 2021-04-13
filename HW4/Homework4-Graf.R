@@ -93,7 +93,7 @@ theta <- 0   # MSEs should be constant for theta, so picking 0 for convenience
 data_a <- matrix(rnorm(n*M, mean = theta, sd = sqrt(3)), nrow = M, ncol = n)
 # Double exponential (Dexp)
 data_b <- matrix(rdexp(n*M, location = theta, scale = sqrt(3/2)), nrow = M, ncol = n)
-# Scaled T
+# Scaled T - for this function, sd is defined as "Scale factor for the shifted, scaled distribution"
 data_c <- matrix(rt.scaled(n*M, df = 3, mean = theta, sd = 1), nrow = M, ncol = n)
 
 # Function to estimate theta 3 ways and calculate MSE for each
@@ -291,8 +291,9 @@ power3
 
 fail_times <- c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)
 xbar <- mean(fail_times)   # Sample mean
+#xsd <- sd(fail_times)   # Sample standard deviation
 n <- length(fail_times)   # Sample size
-M <- 10000   # Simulation size
+M <- 100000   # Simulation size
 
 
 # (a)
@@ -307,5 +308,56 @@ hist(T.pboot)
 
 # (b)
 
+alpha <- 0.1   # 90% confidence intervals
+
+# Exact
+(exact_CI <- c(exp(-100 / (xbar * qgamma(alpha/2, shape = n, scale = 1/n))), exp(-100 / (xbar * qgamma(1-alpha/2, shape = n, scale = 1/n)))))
+
+# Asymptotic
+(asymp_CI <- c(exp(-100 / (qnorm(alpha/2) * xbar / sqrt(n) + xbar)), exp(-100 / (qnorm(1-alpha/2) * xbar / sqrt(n) + xbar))))
+
+
+# Bootstrap
+#hist(pboot)
+gt_100 <- function(x) {
+  # x is a vector
+  return(mean(x>100))   # Returns percentage of elements of x that are >100
+}
+gt_fail <- gt_100(fail_times)   # Apply estimator to original data
+Tb.pboot <- apply(pboot, 1, gt_100)
+p_x_gt_100_est <- mean(Tb.pboot)   # Bootstrap mean of P(X>100), "center" of CI
+p_x_gt_100_sd <- sd(Tb.pboot)   # Bootstrap standard deviation of P(X>100)
+v <- unname(quantile(Tb.pboot, probs = c(1-alpha/2, alpha/2)))
+c(2*gt_fail - v[1], 2*gt_fail - v[2])
+
+
+# (c)
+
+npboot <- matrix(sample(fail_times, size = n*M, replace = TRUE), nrow = M, ncol = n)   # Non-parametric bootstrap sample
+Tc.npboot <- apply(npboot, 1, gt_100)
+mean(Tc.npboot) 
+
+# Bootstrap-t
+V <- apply(npboot, 1, sd)/sqrt(n)
+u <- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))
+c(gt_fail - u[1]*sd(Tc.npboot)/sqrt(n), gt_fail - u[2]*sd(Tc.npboot)/sqrt(n))
+## WHAT SHOULD GO WHERE sd(fail_times) or sd(Tc.npboot) IS CURRENTLY?
+
+# Percentile
+unname(quantile(Tb.pboot, probs = c(alpha/2, 1-alpha/2)))
+
+# BCa
+w <- qnorm(mean(Tc.npboot < gt_100(fail_times)))
+k <- pnorm(2*w - qnorm(c(1-alpha/2, alpha/2)))
+quantile(Tc.npboot, probs = k)
+TJ <- c()
+for(i in 1:n) {
+  TJ[i] <- gt_100(fail_times[-i])
+}
+TJm <- mean(TJ)
+a <- (1/6)*sum((TJm - TJ)^3) / sum((TJm - TJ)^2)^1.5
+z <- qnorm(c(alpha/2, 1-alpha/2))
+l <- pnorm(w + (w + z)/(1 - a*(w + z)))
+quantile(Tc.npboot, probs = l)
 
 
