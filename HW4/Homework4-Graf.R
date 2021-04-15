@@ -311,45 +311,48 @@ hist(T.pboot)
 alpha <- 0.1   # 90% confidence intervals
 
 # Exact
-(exact_CI <- c(exp(-100 / (xbar * qgamma(alpha/2, shape = n, scale = 1/n))), exp(-100 / (xbar * qgamma(1-alpha/2, shape = n, scale = 1/n)))))
+exact_mu_CI <- c(xbar/qgamma(1-alpha/2, shape = n, scale = 1/n), xbar/qgamma(alpha/2, shape = n, scale = 1/n))
+exp(-100/exact_mu_CI)   # Transform exact CI of mu
 
 # Asymptotic
-(asymp_CI <- c(exp(-100 / (qnorm(alpha/2) * xbar / sqrt(n) + xbar)), exp(-100 / (qnorm(1-alpha/2) * xbar / sqrt(n) + xbar))))
-
+asymp_mu_CI <- c(xbar+qnorm(alpha/2)*xbar/sqrt(n), xbar+qnorm(1-alpha/2)*xbar/sqrt(n))
+exp(-100/asymp_mu_CI)   # Transform asymptotic CI of mu
 
 # Bootstrap
-#hist(pboot)
 gt_100 <- function(x) {
   # x is a vector
   return(mean(x>100))   # Returns percentage of elements of x that are >100
 }
-gt_fail <- gt_100(fail_times)   # Apply estimator to original data
-Tb.pboot <- apply(pboot, 1, gt_100)
-p_x_gt_100_est <- mean(Tb.pboot)   # Bootstrap mean of P(X>100), "center" of CI
-p_x_gt_100_sd <- sd(Tb.pboot)   # Bootstrap standard deviation of P(X>100)
+gt_fail <- gt_100(fail_times)
+gt_100_exp <- function(x) {
+  # x is a vector
+  return(exp(-100/mean(x)))   # Returns transformation of estimate of mu
+}
+gt_exp_fail <- gt_100_exp(fail_times)
+Tb.pboot <- apply(pboot, 1, gt_100_exp)   # M draws from parametric bootstrap distribution of exp(-100/mean(x))
 v <- unname(quantile(Tb.pboot, probs = c(1-alpha/2, alpha/2)))
-c(2*gt_fail - v[1], 2*gt_fail - v[2])
+c(2*gt_exp_fail - v[1], 2*gt_exp_fail - v[2])   # Bootstrap CI of P(X>100)
 
 
 # (c)
 
 npboot <- matrix(sample(fail_times, size = n*M, replace = TRUE), nrow = M, ncol = n)   # Non-parametric bootstrap sample
-Tc.npboot <- apply(npboot, 1, gt_100)
-mean(Tc.npboot) 
+Tc.npboot <- apply(npboot, 1, gt_100)   # M draws from non-parametric bootstrap distribution of P(X>100)
 
 # Bootstrap-t
-V <- apply(npboot, 1, sd)/sqrt(n)
-u <- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))
-c(gt_fail - u[1]*sd(Tc.npboot)/sqrt(n), gt_fail - u[2]*sd(Tc.npboot)/sqrt(n))
-## WHAT SHOULD GO WHERE sd(fail_times) or sd(Tc.npboot) IS CURRENTLY?
+#V <- apply(npboot, 1, sd)/sqrt(n)
+V <- sqrt(Tc.npboot * (1-Tc.npboot) / n)   # Because T is a probability, its standard deviation is average of n Bernoullis = sqrt(pq/n)
+u <- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))   # Bootstrap-t quantiles
+sd_obs <- sqrt(gt_fail * (1-gt_fail) / n)   # Standard deviation of observed data is sqrt(pq/n) where p=P(X>100) for observed
+c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X>100)
 
 # Percentile
-unname(quantile(Tb.pboot, probs = c(alpha/2, 1-alpha/2)))
+unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X>100)
 
 # BCa
-w <- qnorm(mean(Tc.npboot < gt_100(fail_times)))
-k <- pnorm(2*w - qnorm(c(1-alpha/2, alpha/2)))
-quantile(Tc.npboot, probs = k)
+w <- qnorm(mean(Tc.npboot < gt_fail))
+#k <- pnorm(2*w - qnorm(c(1-alpha/2, alpha/2)))
+#quantile(Tc.npboot, probs = k)   # Bootstrap bias-corrected percentile CI of P(X>100)
 TJ <- c()
 for(i in 1:n) {
   TJ[i] <- gt_100(fail_times[-i])
@@ -358,6 +361,12 @@ TJm <- mean(TJ)
 a <- (1/6)*sum((TJm - TJ)^3) / sum((TJm - TJ)^2)^1.5
 z <- qnorm(c(alpha/2, 1-alpha/2))
 l <- pnorm(w + (w + z)/(1 - a*(w + z)))
-quantile(Tc.npboot, probs = l)
+quantile(Tc.npboot, probs = l)   # Bootstrap BCa CI of P(X>100)
+
+
+
+
+
+
 
 
