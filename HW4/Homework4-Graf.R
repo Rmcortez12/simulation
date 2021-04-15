@@ -72,7 +72,7 @@ for (j in 1:length(mu_range)) {
 
 plot(x = power$mu, y = power$norm, type = "l", lty = 1, col = 1, 
      xlab = expression(mu), ylab = "Power", 
-     main = "Estimating Power of t-test for 4 families of distributions")
+     main = "Estimating power of t-test for 4 families of distributions")
 lines(x = power$mu, y = power$chisq, type = "l", lty = 1, col = 2)
 lines(x = power$mu, y = power$unif, type = "l", lty = 1, col = 3)
 lines(x = power$mu, y = power$exp, type = "l", lty = 1, col = 4)
@@ -220,7 +220,7 @@ results[3,4] <- mean(apply(comb_dat, 1, lev.test, groups, alpha))   # Should app
 # Results
 results <- as.data.frame(results)
 names(results) <- c("Bartlett (1,1,1)", "Bartlett (10,10,10)", "Levene (1,1,1)", "Levene (10,10,10)")
-rownames(results) <- c("Normal", "Scaled T", "Exponential")
+rownames(results) <- c("Normal", "Scaled t", "Exponential")
 results
 
 
@@ -283,7 +283,7 @@ power3[3,4] <- mean(apply(comb_dat, 1, lev.test, groups, alpha))   # Gives power
 # Results
 power3 <- as.data.frame(power3)
 names(power3) <- c("Bartlett (1,1,3)", "Bartlett (1,2,6)", "Levene (1,1,3)", "Levene (1,2,6)")
-rownames(power3) <- c("Normal", "Scaled T", "Exponential")
+rownames(power3) <- c("Normal", "Scaled t", "Exponential")
 power3
 
 
