@@ -108,10 +108,96 @@ With $n=300$, the power functions are more similar than they would be at $n=30$.
 
 
 # 2. 
+Let $X_1, . . . , X_n$ be a random sample from a distribution that is symmetric about $\theta$, meaning that $X −θ = θ−X$. For continuous random variables this means that for every $x ∈ R$ the cdf of X satisfies $F(θ − x) = 1 − F(θ + x)$ and the pdf satisfies $f(θ −x)= f(θ + x)$. For any of these distributions we have $E_θ(X) = med_θ(X) = θ$ (provided $E_θ(X)$ exists), so two natural estimators of $θ$ are $\overline{x}$ and $M =$ sample median of ${X_1, . . . , X_n}$. A third estimator of $θ$ is the α–trimmed mean, defined as
+
+$$\overline{X}_\alpha = \frac{1}{n-2k}\sum^{n-k}_{i=k+1}X_{(i)}$$
+where $\alpha \in (0,1/2),k = [n\alpha] = (\text{integer part of } n\alpha)$  and $X_{(1)},...X_{(n)}$ are the order statistics. For the questsion below use as a sample size n=30 and as simluation size M=100000.
 
 ## (a) 
 
+Consider the following families of distributions:
+
+$$\text{\{}N(\theta,3):\theta \in \mathbb{R}\text{\}},\text{\{}Dexp(\theta,\sqrt{3/2}):\theta \in \mathbb{R}\text{\}},\text{\{}t_3(\theta,1):\theta \in \mathbb{R}\text{\}},$$
+
+For each of these families compute the mean square error of the estimators $\overline{X}, M, \text{and } \overline{X}_{0.1}$, and comment on how these estimators compare. 
+
+From the table below we can see the MSE for the means are fairly consistent across all the distributions with the scaled T being slightly lower than the other two. Now the median and trimmed mean is significantly lower in the Double Exponential and the Scaled T-distribution. WHY????
+
+```{r}
+
+n <- 30
+set.seed(1)
+M <- 100000
+theta <- 0   # MSEs should be constant for theta, so picking 0 for convenience
+
+# Normal
+data_a <- matrix(rnorm(n*M, mean = theta, sd = sqrt(3)), nrow = M, ncol = n)
+# Double exponential (Dexp)
+data_b <- matrix(rdexp(n*M, location = theta, scale = sqrt(3/2)), nrow = M, ncol = n)
+# Scaled T - for this function, sd is defined as "Scale factor for the shifted, scaled distribution"
+data_c <- matrix(rt.scaled(n*M, df = 3, mean = theta, sd = 1), nrow = M, ncol = n)
+
+# Function to estimate theta 3 ways and calculate MSE for each
+MSEvec.func <- function(data, theta) {
+  # data: Matrix of random data with each row containing a size n sample.
+  #       Has M such rows and will estimate theta across these M Monte Carlo runs.
+  # theta: The true value of the parameter being estimated.
+  
+  est_mean <- apply(data, 1, mean) 
+  est_median <- apply(data, 1, median)
+  est_trimmean <- apply(data, 1, mean, trim = 0.1)
+  MSE_mean <- mean((est_mean - theta)^2)
+  MSE_median <- mean((est_median - theta)^2)
+  MSE_trimmean <- mean((est_trimmean - theta)^2)
+  
+  # Returns vector of the MSE of 3 estimates of theta:  mean, median, and trimmed mean (alpha=0.1)
+  return(c(MSE_mean, MSE_median, MSE_trimmean))
+}
+
+MSEdf <- as.data.frame(rbind(MSEvec.func(data_a, theta),
+                             MSEvec.func(data_b, theta),
+                             MSEvec.func(data_c, theta)))
+names(MSEdf) <- c("MSE_mean", "MSE_median", "MSE_trimmean")
+rownames(MSEdf) <- c("Normal", "DExp", "Scaled T")
+knitr::kable(MSEdf)
+
+
+```
+
+
 ## (b) 
+
+Consider now the family of distributions: 
+
+$$F_\theta(x)=(1-\epsilon)\Phi(\frac{x-\theta}{\sqrt{3}})+\epsilon G_\theta(x), \text{ } \theta \in \mathbb{R}$$
+
+where $G_\theta$ is the cdf of the $t_3(\theta,1)$ distribution and $\epsilon \in (0,1)$. This mixture model, usually called a contamination model, indicates that on average $100(1-\epsilon)$% of the observation come form the $N(\theta,3)$ distribution, while the rest come from teh $t_3(\theta,1)$ distribution. In this case we also have $E\theta(X)=med_\theta(X)=\theta$. Compute the mean square error of the estimators $\overline{X}, M, \text{and } \overline{X}_{0.1}$,when $\epsilon$ is 0.1 and 0.3, and comment on how these estimators compare. 
+
+The mse for all three parameters decreased but not very much, the MSE for the median decreased the most at a magnitude of only .02. 
+
+```{r}
+
+set.seed(1)
+epsilon_range <- c(0.1, 0.3)
+MSEmix <- matrix(nrow = length(epsilon_range), ncol = 3)
+for (k in 1:length(epsilon_range)) {
+  mixing <- rbinom(M, size = 1, prob = epsilon_range[k])   # First draw from mixing distribution
+  data_d <- matrix(nrow = M, ncol = n)
+  for (i in 1:M) {
+    if (mixing[i]) {   # If mixing drew a 1, draw from Scaled T
+      data_d[i,] <- rt.scaled(n, df = 3, mean = theta, sd = 1)
+    } else {   # If mixing drew a 0, draw from Normal
+      data_d[i,] <- rnorm(n, mean = theta, sd = sqrt(3))
+    }
+  }
+  MSEmix[k,] <- MSEvec.func(data_d, theta)   # Calculate 3 MSEs using function from (a)
+}
+MSEmix <- as.data.frame(MSEmix)
+names(MSEmix) <- c("MSE_mean", "MSE_median", "MSE_trimmean")
+rownames(MSEmix) <- c("Eps_0.1", "Eps_0.3")
+knitr::kable(MSEmix)
+```
+
 
 \pagebreak
 
@@ -207,7 +293,7 @@ names(results) <- c("Bartlett (1)", "Bartlett (10)", "Levene (1)", "Levene (10)"
 rownames(results) <- c("Normal", "Scaled t", "Exponential")
 results
 ```
-Bartlett's test appears superior when the data is in fact Normal; the significance levels for Levene's test are a bit higher than they should be ideally.  However, for the other two distributions, Bartlett's test is a disaster; it's non-robustness is borne out.  Levene's test is not terrible for the Scaled t$_3$ distribution.  It is not good for Exponential, but it is far superior to Bartlett's.
+Bartlett's test appears superior when the data is in fact Normal; the significance levels for Levene's test are a bit higher than they should be ideally.  However, for the other two distributions, Bartlett's test is a disaster; it's non-robustness is borne out.  Levene's test is not terrible for the Scaled $t_3$ distribution.  It is not good for Exponential, but it is far superior to Bartlett's.
 
 ## (b)
 
@@ -287,10 +373,41 @@ Bartlett's test is preferred if you are confident your data is from a Normal dis
 
 # 4.
 
+The following are observations on the time (in hours) between failures of an air conditioning equipment: 
+
+$\text{3    5   7   18    43    85    91    98    100   130   230   487}$
+
 ## (a)
+
+Let $\mu$ be the expected value of the failure time. Assuming these data are a random sample form the exp($\mu$) distribution, use bootstrap to estimate the bias and standard deviation of the MLE of $g(\mu) = 1/\mu$
+
+
+```{r}
+
+fail_times <- c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)
+xbar <- mean(fail_times)   # Sample mean
+#xsd <- sd(fail_times)   # Sample standard deviation
+n <- length(fail_times)   # Sample size
+M <- 100000   # Simulation size
+
+
+# (a)
+
+set.seed(1)
+pboot <- matrix(rexp(n*M, rate = 1/xbar), nrow = M, ncol = n)   # Parametric bootstrap sample
+T.pboot <- 1/apply(pboot, 1, mean)   # M draws from bootstrap distribution of g(mu)=1/mu
+hist(T.pboot)
+(bias_est <- mean(T.pboot) - (1/xbar))
+(sd_est <- sd(T.pboot))
+
+```
+
 
 ## (b)
 
+Under the same assumption as in (a), compute exact, asymptotic and bootstrap 90% confidence intervals for $P_\mu(X>100)$. Comment on the differences. 
+
+
 ## (c)
 
-
+Assume now the data are a random sample from an unknown cdf F. compute the bootstrap-t percentile and $BC_a$ 90% Confidence intervals for $P_F(X>100)$. Comment on the differences. 
