@@ -391,6 +391,9 @@ T.pboot <- 1/apply(pboot, 1, mean)   # M draws from bootstrap distribution of g(
 #hist(T.pboot)
 (bias_est <- mean(T.pboot) - (1/xbar))
 (sd_est <- sd(T.pboot))
+
+a<- data.frame("Bias" = bias_est,"SD" = sd_est)
+knitr::kable(a,format = "html", table.attr = "style='width:60%;'")
 ```
 The estimates of the bias and standard deviation of the MLE of $g(\mu) = 1/\mu$ are above.
 
@@ -398,9 +401,84 @@ The estimates of the bias and standard deviation of the MLE of $g(\mu) = 1/\mu$ 
 
 Under the same assumption as in (a), compute exact, asymptotic and bootstrap 90% confidence intervals for $P_\mu(X>100)$. Comment on the differences. 
 
+```{r}
+
+alpha <- 0.1   # 90% confidence intervals
+
+# Exact
+exact_mu_CI <- c(xbar/qgamma(1-alpha/2, shape = n, scale = 1/n), xbar/qgamma(alpha/2, shape = n, scale = 1/n))
+ex <- exp(-100/exact_mu_CI)   # Transform exact CI of mu
+
+# Asymptotic
+asymp_mu_CI <- c(xbar+qnorm(alpha/2)*xbar/sqrt(n), xbar+qnorm(1-alpha/2)*xbar/sqrt(n))
+as <- exp(-100/asymp_mu_CI)   # Transform asymptotic CI of mu
+
+# Bootstrap
+gt_100 <- function(x) {
+  # x is a vector
+  return(mean(x>100))   # Returns percentage of elements of x that are >100
+}
+
+
+gt_100_exp <- function(x) {
+  # x is a vector
+  return(exp(-100/mean(x)))   # Returns transformation of estimate of mu
+}
+
+gt_exp_fail <- gt_100_exp(fail_times)
+
+Tb.pboot <- apply(pboot, 1, gt_100_exp)   # M draws from parametric bootstrap distribution of exp(-100/mean(x))
+v <- unname(quantile(Tb.pboot, probs = c(1-alpha/2, alpha/2)))
+bt <- c(2*gt_exp_fail - v[1], 2*gt_exp_fail - v[2])   # Bootstrap CI of P(X>100)
+
+a <- data.frame("Exact CI"  = ex, "Asymptotic CI" = as, "Bootstrapped CI" = bt,row.names = c("lower","upper"))
+knitr::kable(a,format = "html", table.attr = "style='width:60%;'")
+```
+The Exact confidence interval has the smallest width, which makes sense since it has the strongest assumptions, followed by the confidence interval that was estimated with bootstrap, and the asymptotic confidence interval was just barely larger than the latter. 
+
+
 
 ## (c)
 
 Assume now the data are a random sample from an unknown cdf $F$. compute the bootstrap-t percentile and BC$_a$ 90% confidence intervals for $P_F(X>100)$. Comment on the differences. 
 
+
+```{r}
+npboot <- matrix(sample(fail_times, size = n*M, replace = TRUE), nrow = M, ncol = n)   # Non-parametric bootstrap sample
+Tc.npboot <- apply(npboot, 1, gt_100)   # M draws from non-parametric bootstrap distribution of P(X>100), this is a list of probabilities
+
+# Bootstrap-t
+#V <- apply(npboot, 1, sd)/sqrt(n)
+gt_fail <- gt_100(fail_times)
+
+V <- sqrt(Tc.npboot * (1-Tc.npboot) / n)   # Because T is a probability, its standard deviation is average of n Bernoullis = sqrt(pq/n)
+u <- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))   # Bootstrap-t quantiles
+sd_obs <- sqrt(gt_fail * (1-gt_fail) / n)   # Standard deviation of observed data is sqrt(pq/n) where p=P(X>100) for observed
+c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X>100)
+
+# Percentile
+Boot.t <- unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X>100)
+
+# BCa
+w <- qnorm(mean(Tc.npboot < gt_fail))
+#k <- pnorm(2*w - qnorm(c(1-alpha/2, alpha/2)))
+#quantile(Tc.npboot, probs = k)   # Bootstrap bias-corrected percentile CI of P(X>100)
+TJ <- c()
+for(i in 1:n) {
+  TJ[i] <- gt_100(fail_times[-i])
+}
+TJm <- mean(TJ)
+a <- (1/6)*sum((TJm - TJ)^3) / sum((TJm - TJ)^2)^1.5
+z <- qnorm(c(alpha/2, 1-alpha/2))
+l <- pnorm(w + (w + z)/(1 - a*(w + z)))
+
+BCa <- quantile(Tc.npboot, probs = l)   # Bootstrap BCa CI of P(X>100)
+BCa<-unname(BCa)
+
+all <- data.frame("Bootstrap-t" = Boot.t, "BCa" = BCa, row.names = c("Lower", "Upper"))
+
+knitr::kable(all,format = "html", table.attr = "style='width:60%;'")
+```
+
+Interestingly enough the width of both intervals is the same, the only difference between the 2 seems to be where they are centered.The BCa which adjust for Bias seems to have shifted closer to 0.  
 
