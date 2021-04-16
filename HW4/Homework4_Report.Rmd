@@ -393,7 +393,7 @@ T.pboot <- 1/apply(pboot, 1, mean)   # M draws from bootstrap distribution of g(
 (sd_est <- sd(T.pboot))
 
 a<- data.frame("Bias" = bias_est,"SD" = sd_est)
-knitr::kable(a,format = "html", table.attr = "style='width:60%;'")
+knitr::kable(a,format = "html", table.attr = "style='width:30%;'")
 ```
 The estimates of the bias and standard deviation of the MLE of $g(\mu) = 1/\mu$ are above.
 
@@ -431,10 +431,12 @@ Tb.pboot <- apply(pboot, 1, gt_100_exp)   # M draws from parametric bootstrap di
 v <- unname(quantile(Tb.pboot, probs = c(1-alpha/2, alpha/2)))
 bt <- c(2*gt_exp_fail - v[1], 2*gt_exp_fail - v[2])   # Bootstrap CI of P(X>100)
 
-a <- data.frame("Exact CI"  = ex, "Asymptotic CI" = as, "Bootstrapped CI" = bt,row.names = c("lower","upper"))
-knitr::kable(a,format = "html", table.attr = "style='width:60%;'")
+a <- data.frame(rbind(ex,as,bt),row.names = c("Exact CI", "Asymptotic CI", "Bootstrapped CI"))
+
+knitr::kable(a,format = "html", table.attr = "style='width:40%;'",col.names = c("Lower","Upper"))
 ```
-The Exact confidence interval has the smallest width, which makes sense since it has the strongest assumptions, followed by the confidence interval that was estimated with bootstrap, and the asymptotic confidence interval was just barely larger than the latter. 
+
+The Exact confidence interval has the smallest width, which makes sense since it has the strongest assumptions. The confidence interval that was estimated with bootstrap is only slightly larger, approximating the exact interval quite well. The asymptotic confidence interval is somewhat larger and shifted to the left of the other two.
 
 
 
@@ -454,10 +456,10 @@ gt_fail <- gt_100(fail_times)
 V <- sqrt(Tc.npboot * (1-Tc.npboot) / n)   # Because T is a probability, its standard deviation is average of n Bernoullis = sqrt(pq/n)
 u <- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))   # Bootstrap-t quantiles
 sd_obs <- sqrt(gt_fail * (1-gt_fail) / n)   # Standard deviation of observed data is sqrt(pq/n) where p=P(X>100) for observed
-c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X>100)
+Boot.t <- c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X>100)
 
 # Percentile
-Boot.t <- unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X>100)
+Percentile <- unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X>100)
 
 # BCa
 w <- qnorm(mean(Tc.npboot < gt_fail))
@@ -475,10 +477,10 @@ l <- pnorm(w + (w + z)/(1 - a*(w + z)))
 BCa <- quantile(Tc.npboot, probs = l)   # Bootstrap BCa CI of P(X>100)
 BCa<-unname(BCa)
 
-all <- data.frame("Bootstrap-t" = Boot.t, "BCa" = BCa, row.names = c("Lower", "Upper"))
+knitr::kable(data.frame(rbind(Boot.t,Percentile,BCa)),col.names = c("Lower","Upper"),format = "html", table.attr = "style='width:40%;'")
 
-knitr::kable(all,format = "html", table.attr = "style='width:60%;'")
 ```
 
-Interestingly enough the width of both intervals is the same, the only difference between the 2 seems to be where they are centered.The BCa which adjust for Bias seems to have shifted closer to 0.  
 
+
+As expected, all three non-parametric confidence intervals are larger than the parametric ones from (b) above. The Bootstrap-t interval is the largest of the three. In fact, the widths of the other two are the same. The BCa (which adjusts for bias) is shifted closer to 0.
