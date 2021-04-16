@@ -1053,8 +1053,8 @@ T.pboot &lt;- 1/apply(pboot, 1, mean)   # M draws from bootstrap distribution of
 <pre class="r"><code>(sd_est &lt;- sd(T.pboot))</code></pre>
 <pre><code>## [1] 0.003202506</code></pre>
 <pre class="r"><code>a&lt;- data.frame(&quot;Bias&quot; = bias_est,&quot;SD&quot; = sd_est)
-knitr::kable(a,format = &quot;html&quot;, table.attr = &quot;style=&#39;width:60%;&#39;&quot;)</code></pre>
-<table style="width:60%;">
+knitr::kable(a,format = &quot;html&quot;, table.attr = &quot;style=&#39;width:30%;&#39;&quot;)</code></pre>
+<table style="width:30%;">
 <thead>
 <tr>
 <th style="text-align:right;">
@@ -1109,48 +1109,51 @@ Tb.pboot &lt;- apply(pboot, 1, gt_100_exp)   # M draws from parametric bootstrap
 v &lt;- unname(quantile(Tb.pboot, probs = c(1-alpha/2, alpha/2)))
 bt &lt;- c(2*gt_exp_fail - v[1], 2*gt_exp_fail - v[2])   # Bootstrap CI of P(X&gt;100)
 
-a &lt;- data.frame(&quot;Exact CI&quot;  = ex, &quot;Asymptotic CI&quot; = as, &quot;Bootstrapped CI&quot; = bt,row.names = c(&quot;lower&quot;,&quot;upper&quot;))
-knitr::kable(a,format = &quot;html&quot;, table.attr = &quot;style=&#39;width:60%;&#39;&quot;)</code></pre>
-<table style="width:60%;">
+a &lt;- data.frame(rbind(ex,as,bt),row.names = c(&quot;Exact CI&quot;, &quot;Asymptotic CI&quot;, &quot;Bootstrapped CI&quot;))
+
+knitr::kable(a,format = &quot;html&quot;, table.attr = &quot;style=&#39;width:40%;&#39;&quot;,col.names = c(&quot;Lower&quot;,&quot;Upper&quot;))</code></pre>
+<table style="width:40%;">
 <thead>
 <tr>
 <th style="text-align:left;">
 </th>
 <th style="text-align:right;">
-Exact.CI
+Lower
 </th>
 <th style="text-align:right;">
-Asymptotic.CI
-</th>
-<th style="text-align:right;">
-Bootstrapped.CI
+Upper
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-lower
+Exact CI
 </td>
 <td style="text-align:right;">
 0.2456574
 </td>
 <td style="text-align:right;">
-0.1717470
-</td>
-<td style="text-align:right;">
-0.2498122
+0.5863351
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-upper
+Asymptotic CI
 </td>
 <td style="text-align:right;">
-0.5863351
+0.1717470
 </td>
 <td style="text-align:right;">
 0.5340128
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bootstrapped CI
+</td>
+<td style="text-align:right;">
+0.2498122
 </td>
 <td style="text-align:right;">
 0.5915037
@@ -1158,7 +1161,7 @@ upper
 </tr>
 </tbody>
 </table>
-<p>The Exact confidence interval has the smallest width, which makes sense since it has the strongest assumptions, followed by the confidence interval that was estimated with bootstrap, and the asymptotic confidence interval was just barely larger than the latter.</p>
+<p>The Exact confidence interval has the smallest width, which makes sense since it has the strongest assumptions. The confidence interval that was estimated with bootstrap is only slightly larger, approximating the exact interval quite well. The asymptotic confidence interval is somewhat larger and shifted to the left of the other two.</p>
 </div>
 <div id="c-1" class="section level2">
 <h2>(c)</h2>
@@ -1173,10 +1176,10 @@ gt_fail &lt;- gt_100(fail_times)
 V &lt;- sqrt(Tc.npboot * (1-Tc.npboot) / n)   # Because T is a probability, its standard deviation is average of n Bernoullis = sqrt(pq/n)
 u &lt;- unname(quantile((Tc.npboot - gt_fail)/V, probs = c(1-alpha/2, alpha/2)))   # Bootstrap-t quantiles
 sd_obs &lt;- sqrt(gt_fail * (1-gt_fail) / n)   # Standard deviation of observed data is sqrt(pq/n) where p=P(X&gt;100) for observed
-c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X&gt;100)</code></pre>
-<pre><code>## [1] 0.03349365 0.51111648</code></pre>
-<pre class="r"><code># Percentile
-Boot.t &lt;- unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X&gt;100)
+Boot.t &lt;- c(gt_fail - u[1]*sd_obs, gt_fail - u[2]*sd_obs)   # Bootstrap-t CI of P(X&gt;100)
+
+# Percentile
+Percentile &lt;- unname(quantile(Tc.npboot, probs = c(alpha/2, 1-alpha/2)))   # Bootstrap percentile CI of P(X&gt;100)
 
 # BCa
 w &lt;- qnorm(mean(Tc.npboot &lt; gt_fail))
@@ -1194,40 +1197,49 @@ l &lt;- pnorm(w + (w + z)/(1 - a*(w + z)))
 BCa &lt;- quantile(Tc.npboot, probs = l)   # Bootstrap BCa CI of P(X&gt;100)
 BCa&lt;-unname(BCa)
 
-all &lt;- data.frame(&quot;Bootstrap-t&quot; = Boot.t, &quot;BCa&quot; = BCa, row.names = c(&quot;Lower&quot;, &quot;Upper&quot;))
-
-knitr::kable(all,format = &quot;html&quot;, table.attr = &quot;style=&#39;width:60%;&#39;&quot;)</code></pre>
-<table style="width:60%;">
+knitr::kable(data.frame(rbind(Boot.t,Percentile,BCa)),col.names = c(&quot;Lower&quot;,&quot;Upper&quot;),format = &quot;html&quot;, table.attr = &quot;style=&#39;width:40%;&#39;&quot;)</code></pre>
+<table style="width:40%;">
 <thead>
 <tr>
 <th style="text-align:left;">
 </th>
 <th style="text-align:right;">
-Bootstrap.t
+Lower
 </th>
 <th style="text-align:right;">
-BCa
+Upper
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-Lower
+Boot.t
+</td>
+<td style="text-align:right;">
+0.0334936
+</td>
+<td style="text-align:right;">
+0.5111165
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Percentile
 </td>
 <td style="text-align:right;">
 0.0833333
 </td>
 <td style="text-align:right;">
-0.0000000
+0.5000000
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Upper
+BCa
 </td>
 <td style="text-align:right;">
-0.5000000
+0.0000000
 </td>
 <td style="text-align:right;">
 0.4166667
@@ -1235,7 +1247,7 @@ Upper
 </tr>
 </tbody>
 </table>
-<p>Interestingly enough the width of both intervals is the same, the only difference between the 2 seems to be where they are centered.The BCa which adjust for Bias seems to have shifted closer to 0.</p>
+<p>As expected, all three non-parametric confidence intervals are larger than the parametric ones from (b) above. The Bootstrap-t interval is the largest of the three. In fact, the widths of the other two are the same. The BCa (which adjusts for bias) is shifted closer to 0.</p>
 </div>
 </div>
 

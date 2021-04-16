@@ -3,8 +3,8 @@ title: 'STA 6133: Homework 4'
 author: "Ricardo Cortez & Ben Graf"
 date: "Due 16 Apr 2021"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -288,6 +288,7 @@ rownames(results) <- c("Normal", "Scaled t", "Exponential")
 knitr::kable(results, format = "html", table.attr = "style='width:60%;'")
 ```
 Bartlett's test appears superior when the data is in fact Normal; the significance levels for Levene's test are a bit higher than they should be ideally.  However, for the other two distributions, Bartlett's test is a disaster; it's non-robustness is borne out.  Levene's test is not terrible for the Scaled $t_3$ distribution.  It is not good for Exponential, but it is far superior to Bartlett's.
+
 
 ## (b)
 
