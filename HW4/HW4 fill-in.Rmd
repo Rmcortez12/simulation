@@ -24,7 +24,8 @@ Now, for an exp($\mu$) distribution, the exact confidence interval for $\mu$ is
 $$
 \left[\frac{\bar{x}}{q_{1-\alpha/2}}, \frac{\bar{x}}{q_{\alpha/2}}\right]
 $$
-Again, by invariance, that means the exact confidence interval for $P_\mu(X>100)$ is
+where $q$ is the quantile of the $Gamma(n,1/n)$ distribution.
+<br>Again, by invariance, that means the exact confidence interval for $P_\mu(X>100)$ is
 $$
 \left[e^{-100/\frac{\bar{x}}{q_{1-\alpha/2}}}, e^{-100/\frac{\bar{x}}{q_{\alpha/2}}}\right]
 $$
@@ -33,7 +34,8 @@ The asymptotic confidence interval for $\mu$ is
 $$
 \left[\bar{x}+z_{\alpha/2} \frac{\bar{x}}{\sqrt{n}}, \bar{x}+z_{1-\alpha/2} \frac{\bar{x}}{\sqrt{n}}\right]
 $$
-So, by invariance, the asymptotic confidence interval for $P_\mu(X>100)$ is
+where $z$ is the quantile of the standard Normal distribution.
+<br>So, by invariance, the asymptotic confidence interval for $P_\mu(X>100)$ is
 $$
 \left[e^{-100/\left(\bar{x}+z_{\alpha/2} \frac{\bar{x}}{\sqrt{n}}\right)}, e^{-100/\left(\bar{x}+z_{1-\alpha/2} \frac{\bar{x}}{\sqrt{n}}\right)}\right]
 $$
