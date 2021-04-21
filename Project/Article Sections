@@ -4,8 +4,11 @@
 2. Density Transform Approach
 
 2.1 Kullback-leibler Divergence
+- Why is this important?? 
+
 
 2.2 Product Density Transforms
+  -- Should probably only choose a couple from below? 
 2.2.1 Connection with Gibbs Sampling
 2.2.2 Normal Random Sample
 2.2.3 Linear Mixed Model
@@ -22,3 +25,6 @@
 4.1 Poisson Mixed Model
 
 5. Closing Discussion
+  he states "Our goal in this article is to explain variational approximations in a digestible form for a statistical audience" lolol 
+  
+  
