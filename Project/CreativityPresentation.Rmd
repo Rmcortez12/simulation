@@ -1,0 +1,180 @@
+---
+title: "The Effects of Social and Economic Capital on Self-perceptions of Creativity"
+author: "Viviane Callier, Ben Graf, Cong Zhang"
+date: "3 Dec 2020"
+output: 
+  beamer_presentation:
+    theme: "CambridgeUS"
+    colortheme: "default"
+    fonttheme: "structurebold"
+header-includes:
+  - \AtBeginDocument{\title[Self-perceptions of Creativity]{The Effects of Social and Economic Capital on Self-perceptions of Creativity}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+pacman::p_load(pacma, dplyr, olsrr, ggplot2, glmnet, leaps, car, MASS)
+load("/Users/Ben/Library/Mobile Documents/com~apple~CloudDocs/Documents/UTSA Master's/Semester 3/STA 6923 Statistical Learning/Project/ICPSR_37853/DS0001/cleandata2.RData")
+df <- creativity
+```
+
+## Outline
+
+- Background
+- Data Structure
+- Statistical Method
+- Analysis Result
+- Discussion
+
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+knitr::include_graphics('./creativity.jpg')
+```
+
+## Background
+
+- Psychologists have defined 6 domains of creativity
+  + Artistic
+  + Science/math/engineering (STEM)
+  + Social
+  + Sales and business
+  + Daily life problem solving
+  + Community leadership
+- ***What are the effects of social and economic capital on self-assessed creativity across domains?***
+- We used multiple linear regression with Lasso to select variables
+
+## Data Structure
+
+- Used “Self-Perceptions of Creativity & Arts Participation, United States, 2018” dataset
+  + Survey of 3447 US adults
+  + 258 variables
+- 43 questions across the 6 creativity domains in the form: *"Compared to people of approximately your age and life experience, how creative would you rate yourself for each of the following activities?"*  Examples include:
+  + *Making up lyrics to a song* (Artistic)
+  + *Building something mechanical, like a robot* (STEM)
+  + *Mediating a dispute between two friends* (Social)
+  + *Pitching your ideas to other people* (Business)
+  + *Creating a tasty meal out of scattered leftovers* (Daily)
+  + *Organizing a petition, rally, or boycott of a product* (Community)
+
+
+## Data Structure
+
+- Previous study found strong correlation between Social, Business, Daily, and Community domains, so we combined them into an SBDC domain
+
+![](Correlation between domains.png)
+
+- We averaged responses (1 = "Much less creative", 5 = "Much more creative") for all questions within a domain to get three creativity indices to serve as responses
+
+## Data Structure
+
+- Selected 26 predictors that measure social and economic capital plus 3 control variables
+- 13 measured different forms of social help, such as, *"Do you know anyone who can loan you a large sum of money?"*
+  + We created a Social Help Index (SHI) that summed the "Yes" responses for these 13 variables
+  + Tested models using the 13 separate questions as well as model using SHI instead
+- Deleted observations containing at least one missing value for variables we kept, leaving 3279 observations
+
+## Statistical Method
+
+- Performed 3 multiple linear regressions
+  + One each with Artistic, STEM, and SBDC creativity indices as response
+  + Used all predictors except SHI
+  + Checked assumptions - Residuals not normal
+```{r fig.width=10, fig.height=5}
+stem.fit.all <- lm(stem ~ . -artistic -sbd -SHI, data = creativity)
+par(mfrow=c(1,2))
+plot(stem.fit.all, which=1:2)
+```
+  + Removed all outliers (32) with Studentized deleted residuals beyond $\pm$ 3
+
+## Statistical Method
+
+- Regressions were significant but Adjusted $R^2$ was low:
+
+Domain | Q5 Model Adjusted $R^2$ | SHI Model Adjusted $R^2$
+-|-|-
+Artistic | 0.1124 | 0.0885
+STEM | 0.1448 | 0.1320
+SBDC | 0.1810 | 0.1524
+
+- Could not rely on p-values due to normality violation
+  + Coefficient estimates still valid
+- Focused on variable selection instead
+- Conducted Stepwise Selection and Lasso on each model
+  + Stepwise: $p_{enter} = 0.05$ and $p_{remain} = 0.10$
+  + Lasso: considered both $\lambda_{min}$ and $\lambda_{1se}$
+- Preferred Lasso with $\lambda_{1se}$
+
+## Analysis Result
+
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+knitr::include_graphics('Table of selected variables.png')
+```
+
+## Analysis Result
+
+- SHI was selected and positive across all 3 domains
+- These 4 social help questions positively predicted creativity across all 3 domains:
+  + Q5H - *Do you know anyone who is sometimes in the position to hire people?*
+  + Q5K - *Do you know anyone who knows a lot about financial matters (taxes, loans)?*
+  + Q5L - *Do you know anyone who can give advice on matters of law (problems with landlords, going to court, etc.)?*
+  + Q5M - *Do you know anyone who has good contacts with a newspaper, radio, TV station or blogger?*
+- All four questions involve professional contacts
+
+## Analysis Result
+
+- These predictors had opposite signs in different domains:
+  + Being **male** increased self-perceived creativity in STEM but decreased it in Artistic; it was not selected in SBDC
+  + **Age** had a positive relationship with SBDC creativity, a negative one with STEM, and was not selected for Artistic
+  + Being **Asian** increased self-perceived Artistic creativity but decreased SBDC; it was not selected for STEM
+
+## Analysis Result
+
+- Artistic
+  + Positive relationship
+    * Knowing someone who can loan you money
+    * Knowing someone who can advise on family conflicts
+    * Not working
+  + Negative relationship
+    * Working or being retired
+    * Income
+    * Having internet
+    * Owning or renting your residence (vice occupying)
+<p>&nbsp;</p>
+- STEM
+  + Positive relationship
+    * Knowing someone who can repair a bike or car
+    
+## Analysis Result
+
+- SBDC
+  + Positive relationship
+    * Knowing someone who can loan you money
+    * Knowing someone who can advise on family conflicts
+    * Knowing someone who can be a good job reference
+    * Knowing someone in local government
+    * Education
+  + Negative relationship
+    * Parents were NOT immigrants
+<p>&nbsp;</p>
+- Variables NOT selected for any domain
+  + Respondent's immigrant status
+  + Marital status
+  + Number of children/adults in household
+
+## Discussion
+
+- Our findings suggest certain stereotypes have been internalized
+- Further hypothesis testing is messy without normal residuals
+- Our low $R^2$ values indicate our predictors cannot explain a large portion of the variability in self-perceived creativity
+  + This is common in social science data
+- All of these findings are examinations of *self-perceived* creativity, not actual creativity
+
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+knitr::include_graphics('./brainhalves.jpg')
+```
+
+## Questions?
+
+```{r echo=FALSE, out.height='80%', fig.align='center'}
+knitr::include_graphics('./openbrain.jpg')
+```
+  
