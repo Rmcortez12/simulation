@@ -1,30 +1,42 @@
 1. Introduction
-1.1 Definitions
+
 
 2. Density Transform Approach
+  R.c
+  2.1 Kullback-leibler Divergence
+    - Why is this important?? 
 
-2.1 Kullback-leibler Divergence
-- Why is this important?? 
+  BEN: 
+  2.2 Product Density Transforms
+    2.2.1 Connection with Gibbs Sampling
+    2.2.2 Normal Random Sample
+    2.2.3 Linear Mixed Model
+  
+  R.C.
+  2.3 Parametric Density Transforms
+  2.3.1 Poisson Regreession with Gaussian Transform
+
+R.C.
+3. Tangent Transform Approach
+  3.1 Bayesian Logistic Regression
+
+4. Conclusions
+
+*** MCMC comparison
 
 
-2.2 Product Density Transforms
-  -- Should probably only choose a couple from below? 
-2.2.1 Connection with Gibbs Sampling
-2.2.2 Normal Random Sample
-2.2.3 Linear Mixed Model
+*************************************
+
+1.1 Definitions?? 
+
 2.2.4 Probit Regression and the use of Auxiliary Variables
 2.2.5 Finite Normal Mixture Model
 
-2.3 Parametric Density Transforms
-2.3.1 Poisson Regreession with Gaussian Transform
-
-3. Tangent Transform Approach
-3.1 Bayesian Logistic Regression
-
-4. Frequentist Inference
+  
+4. Frequentist Inference - comment on it, but leave it out
 4.1 Poisson Mixed Model
+
+
 
 5. Closing Discussion
   he states "Our goal in this article is to explain variational approximations in a digestible form for a statistical audience" lolol 
-  
-  
