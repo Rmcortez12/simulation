@@ -2,11 +2,12 @@
 title: "Explaining Variational Approximations"
 author: "Ricardo Cortez & Ben Graf"
 date: "28 Apr 2021"
-output: 
+output:
+  ioslides_presentation: default
   beamer_presentation:
-    theme: "CambridgeUS"
-    colortheme: "default"
-    fonttheme: "structurebold"
+    theme: CambridgeUS
+    colortheme: default
+    fonttheme: structurebold
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +24,16 @@ pacman::p_load(pacman)
 - Tangent Transform Approach
 <p>&nbsp;</p>
 - Conclusions
+
+## Density Transform Approach
+
+- An approach to approximating intractable posterior densities with better known and easier to deal with densities
+- Guided by Kullback-Leibler Divergence
+$$\text{formula 2+4+ } p(y) > p(y;q)$$
+  - provides a lower bound which can be maximized in order to minimize the k-l divergence between q and p(.|y)
+- Two main Transforms
+  a. Product Density Transforms (non-parametric)
+  b. Parametric Density Transforms (parametric)
 
 ## Product Density Transforms
 
@@ -149,5 +160,80 @@ SHOW FIGURE 4
 #knitr::include_graphics('Table of selected variables.png')
 ```
 
+## Parametric Density Transform with Poisson Example
+
+- Assume q is subject to the parametric restriction from earlier. 
+  - mainly q belongs to a specific parametric family  and hope this results in a more tractable approximation to the posterior density
+- Poisson Regression with Gaussian Transform Example: 
+  - consider the The Bayesian Poisson regression Model: 
+  
+  $$Y_i|\beta_0...$$
+  - The priors on the coefficient vector $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$ and X is defined as before
+  
+## Poisson Regression with Gaussian Transform
+
+- The likelihood is: 
+
+$$p(y|\beta)=$$
+
+- This leads to an integral that has no closed form solution (intractable)
+
+$$\text{marginal likelihood}$$
+
+## Poisson Regression with Gaussian Transform
+
+- Take q ~ N()
+$$q() = equation$$
+- then the lower bound as defined earlier gives explicitly: 
+$$eq19$$
+
+- note that from earlier 
+$$logp(y) >= log(lowerbound)$$
+- the optimal variational parameters can be found through maximizing the inequality above using the Newton-Raphson iteration. This will ensure a minimization of the K.L. Divergence and the most optimal Gaussian Density Transform q* . 
+
+## Tangent Transform Approach
+  
+- Not all variational Approximation fit into Kullback-Leibler Divergence Framework. 
+- Tangent Transforms work with *tangent-type* representations.
+- eq 20 
+<<Insert Figure 7 here>>
+- underpinned by *convex duality* <- outside of scope of paper 
+
+## Bayesian Logistic Regression
+
+- Jaakkola and Jordan (2000) explain that BLR lends itself to tangent transform variational approximations
+$$Y_i|\beta_0....$$
+- The priors on the coefficient vector $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$ and X is defined as before
+- The Likelihood is: 
+$$$$
+- and the posterior density of $\beta$ is 
+$$$$
+
+## Bayesian Logistic Regression
+- where $p(y|\beta)$ is: 
+
+$$eq21$$
+
+- Provides an intractable integral
+
+- note -log(1+e^x) as the maxima of a family of parabolas:
+$$eq22 \text{ by Jaakkola and Jordan}$$
+- Where $xi$ is $nx1$ vector of variational parameters. 
+
+## Bayesian Logistic Regression 
+
+- The previous representation will provide the following lower bound on p(y;beta) 
+
+$$\text{between eq 23 and 24}$$
+- which is proportional to the Multivariate Normal
+$$eq24$$
+
+## Bayesian Logistic Regression  
+
+- The previous equation still contains the vector of unknown variational parameters $\xi$ 
+- Set p(y,xi) as close as possible to p(y). 
+- since p(y,xi) <= p(y) for all xi this reduces to maximizing p(y,xi) which can be solved numerically
+$$log\ p(y; \xi) = []$$
+- Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
 
