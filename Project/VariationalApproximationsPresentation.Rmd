@@ -1,0 +1,153 @@
+---
+title: "Explaining Variational Approximations"
+author: "Ricardo Cortez & Ben Graf"
+date: "28 Apr 2021"
+output: 
+  beamer_presentation:
+    theme: "CambridgeUS"
+    colortheme: "default"
+    fonttheme: "structurebold"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+pacman::p_load(pacman)
+```
+
+## Outline
+
+- Introduction
+<p>&nbsp;</p>
+- Density Transform Approach
+<p>&nbsp;</p>
+- Tangent Transform Approach
+<p>&nbsp;</p>
+- Conclusions
+
+## Product Density Transforms
+
+- Suppose $q$ is subject to the product restriction (a) from the previous slide
+- It can be shown that the optimal densities satisfy 
+$$\text{formula 5}$$
+where $E_{-\boldsymbol{\theta}_i}$ denotes the expectation of the density with $q_i$ removed
+- This leads to the algorithm on the next slide to solve for the $q_i^*$
+- Notes:
+  + Can show that convergence to at least local optima guaranteed
+  + If conjugate priors used, then the $q_i^*$ updates reduce to updating parameters in a density family
+  + Common to monitor convergence using $\text{log }\underline{p}(\boldsymbol{y};q)$
+
+## Product Density Transforms
+
+SHOW ALGORITHM 1
+
+## Connection with Gibbs Sampling
+
+- An alternative expression for the $q_i^*$ is 
+$$\text{formula 6 subbing in "rest"}$$
+- The distributions $\boldsymbol{\theta}_i|\text{sub in for "rest"}$ are called full conditionals in Markov Chain Monte Carlo
+- Gibbs sampling uses repeated draws from these
+- In fact, product density transforms are tractable when Gibbs is
+
+## PDT Example 1: Normal Random Sample
+
+- Objective is to approximate Bayesian inference for a random sample from a Normal distribution
+$$\text{first equation}$$
+with conjugate priors
+$$\text{second equation}$$
+- The product density transform approximation of $p(\mu,\sigma^2|\boldsymbol{x})$ is 
+$$\text{formula 8}$$
+- The optimal densities take the form
+$$\text{next equation}$$
+
+## PDT Example 1: Normal Random Sample
+
+- The resulting estimates are:
+$$q_{\sigma^2}^*(\sigma^2)\text{ is InverseGamma(...)}$$
+$$q_{\mu}^*(\mu)\text{ is Normal(...)}$$
+and
+$$\text{log }\underline{p}(\boldsymbol{x};q) = ...$$
+- This leads to the algorithm on the next slide
+
+## PDT Example 1: Normal Random Sample
+
+SHOW ALGORITHM 2
+
+## PDT Example 1: Normal Random Sample
+
+- Upon convergence, the posterior densities are approximated as
+$$p(\mu|\boldsymbol{x}) \approx ...$$
+$$p(\sigma^2|\boldsymbol{x}) \approx ...$$
+- Next slide's plots compare product density variational approximations with exact posterior density
+  + Sample size $n=20$ from $N(100,225)$
+  + Vague priors chosen: $\mu \sim N(0,10^8),\ \sigma^2 \sim IG(\frac{1}{100},\frac{1}{100})$
+  + Initial value $B_{q(\sigma^2)}=1$
+  + Convergence very rapid, accuracy quite good
+
+## PDT Example 1: Normal Random Sample
+
+SHOW FIGURE 2
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+#knitr::include_graphics('Table of selected variables.png')
+```
+
+## PDT Example 2: Linear Mixed Model
+
+- Objective is to approximate Bayesian inference for a random sample from a Gaussian linear mixed model
+$$\text{formula 11}$$
+where 
+  + $\boldsymbol{y}$ is $n \times 1$ response, 
+  + $\boldsymbol{\beta}$ is $p \times 1$ fixed effects, 
+  + $\boldsymbol{u}$ is random effects,
+  + $\boldsymbol{X}$ and $\boldsymbol{Z}$ are design matrices, and
+  + $\boldsymbol{G}$ and $\boldsymbol{R}$ are covariance matrices
+- Conjugate priors are
+$$\text{formula 13}$$
+
+## PDT Example 2: Linear Mixed Model
+
+Directed Acyclic Graph (DAG) for Example 2
+SHOW FIGURE 3
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+#knitr::include_graphics('Table of selected variables.png')
+```
+
+## PDT Example 2: Linear Mixed Model
+
+- The two-component product transform is
+$$\text{formula 14}$$
+- This leads to optimal densities
+$$q_{\boldsymbol{\beta},\boldsymbol{u}}^*({\boldsymbol{\beta},\boldsymbol{u}})\text{ is a Multivariate Normal density}$$
+$$q_{\boldsymbol{\sigma^2}}^*\text{ is a product of $r+1$ Inverse Gamma densities}$$
+and
+$$\text{log }\underline{p}(\boldsymbol{y};q) = ...$$
+- This leads to the algorithm on the next slide
+
+## PDT Example 2: Linear Mixed Model
+
+SHOW ALGORITHM 3
+
+## PDT Example 2: Linear Mixed Model
+
+- Upon convergence, the posterior densities are approximated as
+$$p(\boldsymbol{\beta},\boldsymbol{u}|\boldsymbol{y}) \approx ...$$
+$$p(\sigma^2_{u1},...,\sigma^2_{ur},\sigma^2_{\varepsilon}|\boldsymbol{y}) \approx ...$$
+
+## PDT Example 2: Linear Mixed Model
+
+- Next slide's plots compare product density variational approximations with exact posterior density
+  + Data set is longitudinal orthodontic measurements (Pinheiro & Bates, 2000)
+  + Random intercept model:
+$$\text{formulas 16}$$
+  + Vague priors chosen: $\sigma^2_\beta = 10^8,\ A=B=\frac{1}{100}$
+  + Compared against kernel density estimates using 1M MCMC samples
+  + Convergence again quite rapid, estimates quite close to MCMC, statistical significance of all parameters
+
+## PDT Example 2: Linear Mixed Model
+
+SHOW FIGURE 4
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+#knitr::include_graphics('Table of selected variables.png')
+```
+
+
+
