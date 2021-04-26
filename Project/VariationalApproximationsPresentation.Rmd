@@ -3,7 +3,6 @@ title: "Explaining Variational Approximations"
 author: "Ricardo Cortez & Ben Graf"
 date: "28 Apr 2021"
 output:
-  ioslides_presentation: default
   beamer_presentation:
     theme: CambridgeUS
     colortheme: default
@@ -25,19 +24,22 @@ pacman::p_load(pacman)
 <p>&nbsp;</p>
 - Conclusions
 
+## Introduction
+NEED STUFF HERE! VERY IMPORTANT!
+
 ## Density Transform Approach
 
-- An approach to approximating intractable posterior densities with better known and easier to deal with densities
-- Guided by Kullback-Leibler Divergence
-$$\text{formula 2+4+ } p(y) > p(y;q)$$
+- Approximates intractable posterior densities with better known and easier to deal with densities
+- Guided by Kullback-Leibler divergence
+$$\text{formula 2+3+4+ } p(y) > p(y;q)$$
   - provides a lower bound which can be maximized in order to minimize the k-l divergence between q and p(.|y)
-- Two main Transforms
-  a. Product Density Transforms (non-parametric)
-  b. Parametric Density Transforms (parametric)
+- Two main types of restrictions for the $q$ density:
+  + Product Density Transforms (non-parametric)
+  + Parametric Density Transforms (parametric)
 
 ## Product Density Transforms
 
-- Suppose $q$ is subject to the product restriction (a) from the previous slide
+- Suppose $q$ is subject to the product restriction from the previous slide
 - It can be shown that the optimal densities satisfy 
 $$\text{formula 5}$$
 where $E_{-\boldsymbol{\theta}_i}$ denotes the expectation of the density with $q_i$ removed
@@ -59,7 +61,7 @@ $$\text{formula 6 subbing in "rest"}$$
 - Gibbs sampling uses repeated draws from these
 - In fact, product density transforms are tractable when Gibbs is
 
-## PDT Example 1: Normal Random Sample
+## Product DT Example 1: Normal Random Sample
 
 - Objective is to approximate Bayesian inference for a random sample from a Normal distribution
 $$\text{first equation}$$
@@ -70,7 +72,7 @@ $$\text{formula 8}$$
 - The optimal densities take the form
 $$\text{next equation}$$
 
-## PDT Example 1: Normal Random Sample
+## Product DT Example 1: Normal Random Sample
 
 - The resulting estimates are:
 $$q_{\sigma^2}^*(\sigma^2)\text{ is InverseGamma(...)}$$
@@ -79,11 +81,11 @@ and
 $$\text{log }\underline{p}(\boldsymbol{x};q) = ...$$
 - This leads to the algorithm on the next slide
 
-## PDT Example 1: Normal Random Sample
+## Product DT Example 1: Normal Random Sample
 
 SHOW ALGORITHM 2
 
-## PDT Example 1: Normal Random Sample
+## Product DT Example 1: Normal Random Sample
 
 - Upon convergence, the posterior densities are approximated as
 $$p(\mu|\boldsymbol{x}) \approx ...$$
@@ -94,14 +96,14 @@ $$p(\sigma^2|\boldsymbol{x}) \approx ...$$
   + Initial value $B_{q(\sigma^2)}=1$
   + Convergence very rapid, accuracy quite good
 
-## PDT Example 1: Normal Random Sample
+## Product DT Example 1: Normal Random Sample
 
 SHOW FIGURE 2
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 #knitr::include_graphics('Table of selected variables.png')
 ```
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 - Objective is to approximate Bayesian inference for a random sample from a Gaussian linear mixed model
 $$\text{formula 11}$$
@@ -114,7 +116,7 @@ where
 - Conjugate priors are
 $$\text{formula 13}$$
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 Directed Acyclic Graph (DAG) for Example 2
 SHOW FIGURE 3
@@ -122,7 +124,7 @@ SHOW FIGURE 3
 #knitr::include_graphics('Table of selected variables.png')
 ```
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 - The two-component product transform is
 $$\text{formula 14}$$
@@ -133,17 +135,17 @@ and
 $$\text{log }\underline{p}(\boldsymbol{y};q) = ...$$
 - This leads to the algorithm on the next slide
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 SHOW ALGORITHM 3
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 - Upon convergence, the posterior densities are approximated as
 $$p(\boldsymbol{\beta},\boldsymbol{u}|\boldsymbol{y}) \approx ...$$
 $$p(\sigma^2_{u1},...,\sigma^2_{ur},\sigma^2_{\varepsilon}|\boldsymbol{y}) \approx ...$$
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Data set is longitudinal orthodontic measurements (Pinheiro & Bates, 2000)
@@ -153,74 +155,72 @@ $$\text{formulas 16}$$
   + Compared against kernel density estimates using 1M MCMC samples
   + Convergence again quite rapid, estimates quite close to MCMC, statistical significance of all parameters
 
-## PDT Example 2: Linear Mixed Model
+## Product DT Example 2: Linear Mixed Model
 
 SHOW FIGURE 4
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 #knitr::include_graphics('Table of selected variables.png')
 ```
 
-## Parametric Density Transform with Poisson Example
+## Parametric DT Example: Poisson Regression
 
-- Assume q is subject to the parametric restriction from earlier. 
-  - mainly q belongs to a specific parametric family  and hope this results in a more tractable approximation to the posterior density
-- Poisson Regression with Gaussian Transform Example: 
-  - consider the The Bayesian Poisson regression Model: 
+- Now assume $q$ is subject to the parametric restriction
+  - Belongs to a specific parametric family that (hopefully) results in a more tractable approximation to the posterior density
+- Poisson Regression with Gaussian Transform example: 
+  - Consider the Bayesian Poisson Regression Model: 
   
   $$Y_i|\beta_0...$$
-  - The priors on the coefficient vector $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$ and X is defined as before
+  - With priors on the coefficient vector of $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$
   
-## Poisson Regression with Gaussian Transform
+## Parametric DT Example: Poisson Regression
 
-- The likelihood is: 
+- The likelihood is
 
 $$p(y|\beta)=$$
 
-- This leads to an integral that has no closed form solution (intractable)
+- This leads to an integral that has no closed form solution (intractable):
 
 $$\text{marginal likelihood}$$
 
-## Poisson Regression with Gaussian Transform
+## Parametric DT Example: Poisson Regression
 
 - Take q ~ N()
 $$q() = equation$$
-- then the lower bound as defined earlier gives explicitly: 
+- Then the lower bound as defined earlier gives explicitly
 $$eq19$$
 
-- note that from earlier 
-$$logp(y) >= log(lowerbound)$$
-- the optimal variational parameters can be found through maximizing the inequality above using the Newton-Raphson iteration. This will ensure a minimization of the K.L. Divergence and the most optimal Gaussian Density Transform q* . 
+- From earlier,
+$$logp(y) \ge log(lowerbound)$$
+- The optimal variational parameters are found through maximizing this inequality using Newton-Raphson iteration
+- This minimizes the K-L divergence and provides the optimal Gaussian density transform $q^*$
 
 ## Tangent Transform Approach
   
-- Not all variational Approximation fit into Kullback-Leibler Divergence Framework. 
-- Tangent Transforms work with *tangent-type* representations.
+- Not all variational approximations fit into Kullback-Leibler divergence framework
+- Tangent transforms work with *tangent-type* representations of concave/convex functions
 - eq 20 
 <<Insert Figure 7 here>>
-- underpinned by *convex duality* <- outside of scope of paper 
+```{r echo=FALSE, out.width='70%', fig.align='center'}
+#knitr::include_graphics('Table of selected variables.png')
+```
+- Underpinned by theory of *convex duality*
 
-## Bayesian Logistic Regression
+## TT Example: Bayesian Logistic Regression
 
-- Jaakkola and Jordan (2000) explain that BLR lends itself to tangent transform variational approximations
+- Consider Bayesian logistic regression model
 $$Y_i|\beta_0....$$
-- The priors on the coefficient vector $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$ and X is defined as before
-- The Likelihood is: 
-$$$$
-- and the posterior density of $\beta$ is 
-$$$$
-
-## Bayesian Logistic Regression
-- where $p(y|\beta)$ is: 
-
+- With priors on the coefficient vector of $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$
+- The likelihood is
+$$a$$
+and the posterior density of $\beta$ is 
+$$a$$
+where $p(y|\beta)$ is
 $$eq21$$
+and the denominator is an intractable integral
+- Note $-log(1+e^x)$ are the maxima of a family of parabolas:
+$$eq22$$
 
-- Provides an intractable integral
-
-- note -log(1+e^x) as the maxima of a family of parabolas:
-$$eq22 \text{ by Jaakkola and Jordan}$$
-- Where $xi$ is $nx1$ vector of variational parameters. 
-
-## Bayesian Logistic Regression 
+## TT Example: Bayesian Logistic Regression 
 
 - The previous representation will provide the following lower bound on p(y;beta) 
 
@@ -228,10 +228,10 @@ $$\text{between eq 23 and 24}$$
 - which is proportional to the Multivariate Normal
 $$eq24$$
 
-## Bayesian Logistic Regression  
+## TT Example: Bayesian Logistic Regression  
 
 - The previous equation still contains the vector of unknown variational parameters $\xi$ 
-- Set p(y,xi) as close as possible to p(y). 
+- Set p(y,xi) as close as possible to p(y)
 - since p(y,xi) <= p(y) for all xi this reduces to maximizing p(y,xi) which can be solved numerically
 $$log\ p(y; \xi) = []$$
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
