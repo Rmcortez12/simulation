@@ -209,23 +209,25 @@ $$a$$
 where $p(y|\beta)$ is
 $$eq21$$
 and the denominator is an intractable integral
-- Note $-log(1+e^x)$ are the maxima of a family of parabolas:
-$$eq22$$
+
 
 ## TT Example: Bayesian Logistic Regression 
 
-- The previous representation will provide the following lower bound on p(y;beta) 
+- It can be shown $-log(1+e^x)$ are the maxima of a family of parabolas:
+$$eq22$$
+- above equation is a *tangent-type* representation of a convex function. 
 
-$$\text{between eq 23 and 24}$$
-- which is proportional to the Multivariate Normal
+## TT Example: Bayesian Logistic Regression 
+
+- Under similar derivations as the previous problem, the family of variational approximations to $\beta|y$ is:
 $$eq24$$
 
-## TT Example: Bayesian Logistic Regression  
-
-- The previous equation still contains the vector of unknown variational parameters $\xi$ 
-- Set p(y,xi) as close as possible to p(y)
-- since p(y,xi) <= p(y) for all xi this reduces to maximizing p(y,xi) which can be solved numerically
-$$log\ p(y; \xi) = []$$
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
 
+
+## Conclusion
+
+- Doesn't cover the accuracy of the approximations
+- Usefulness of the variational approximations increases as the size increases
+  - MCMC begins to become untenable
