@@ -5,7 +5,7 @@ date: "28 Apr 2021"
 output:
   beamer_presentation:
     theme: CambridgeUS
-    colortheme: default
+    colortheme: dolphin
     fonttheme: structurebold
 ---
 
@@ -289,28 +289,25 @@ $$\text{marginal likelihood}$$
 ## Parametric DT Example: Poisson Regression
 
 - Take $q \sim N(\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})$
-$$q(\boldsymbol{\beta;\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) =
-
+$$
+q(\boldsymbol{\beta;\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) =
 (2\pi)^{-p/2}|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|^{-1/2}*exp\{-\frac{1}{2}(\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})^T \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^{-1} (\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})\}
-
 $$
 - Then the lower bound as defined earlier gives explicitly
 $$
-
-log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)}}) = 
-
-
-\boldsymbol{y}^T\boldsymbol{X\mu_{q(\beta)}-I}_n^Texp\{\boldsymbol{X\mu_{q(\beta)}}+\frac{1}{2}diagonal(\boldsymbol{X\Sigma}_{q(\beta)}\boldsymbol{X}^T)\}
-
-
--\frac{1}{2}(\boldsymbol{\mu_{q(\beta)}-\mu_\beta})^T\boldsymbol{\Sigma}^{-1}_\beta(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\mu_\boldsymbol{\beta})-\frac{1}{2}tr(\boldsymbol{\Sigma}^{-1}_\boldsymbol{\beta}\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})
-
-+\frac{1}{2}log|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|+\frac{k+1}{2}-\boldsymbol{I}^T_nlog(\boldsymbol{y!})
-
+\begin{aligned}
+\log \underline{p} &\left(\mathbf{y} ; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
+=& \mathbf{y}^{T} \mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\mathbf{1}_{n}^{T} \exp \left\{\mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}+\frac{1}{2} \operatorname{diagonal}\left(\mathbf{X} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})} \mathbf{X}^{T}\right)\right\} \\
+&-\frac{1}{2}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)^{T} \boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)-\frac{1}{2} \operatorname{tr}\left(\boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
+&+\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right|-\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{\boldsymbol{\beta}}\right|+\frac{k+1}{2} \\
+&-\mathbf{1}_{n}^{T} \log (\mathbf{y} !)
+\end{aligned}
 $$
 
 - From earlier,
-$$logp(y) \geq log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)}})$$
+$$
+\log p(y) \geq \log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)}})
+$$
 - The optimal variational parameters are found through maximizing this inequality using Newton-Raphson iteration
 - This minimizes the K-L divergence and provides the optimal Gaussian density transform $q^*$
 
@@ -318,39 +315,54 @@ $$logp(y) \geq log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)
   
 - Not all variational approximations fit into Kullback-Leibler divergence framework
 - Tangent transforms work with *tangent-type* representations of concave/convex functions
-$$log(x) = min\{\xi x -log(\xi)-1\} \text{ for all x> 0}$$
+$$
+log(x) = min\{\xi x -log(\xi)-1\} \text{ for all x> 0}
+$$
 
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 knitr::include_graphics('Figure7.png')
-
 ```
 - Underpinned by theory of *convex duality*
 
 ## TT Example: Bayesian Logistic Regression
 
 - Consider Bayesian logistic regression model
-$$Y_i|\beta_0,...,\beta_k\sim Bernoulli([1+exp\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\}]^{-1}), \text{ }1\leq i \leq n$$
+$$
+Y_i|\beta_0,...,\beta_k\sim Bernoulli([1+exp\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\}]^{-1}), \text{ }1\leq i \leq n
+$$
 
 - With priors on the coefficient vector of $\beta \sim N(\mu_\beta,\Sigma_\beta)$
 - The likelihood is
-$$p(\boldsymbol{y|\beta)}=exp[\boldsymbol{y^TX\beta-I^T_n}log\{I_n+exp(\boldsymbol{X\beta})\}]$$
+$$
+p(\boldsymbol{y|\beta)}=exp[\boldsymbol{y^TX\beta-I^T_n}log\{I_n+exp(\boldsymbol{X\beta})\}]
+$$
 and the posterior density of $\beta$ is 
-$$p(\boldsymbol{\beta|y})=p(\boldsymbol{y,\beta})/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y,\beta)d\beta}$$
+$$
+p(\boldsymbol{\beta|y})=p(\boldsymbol{y,\beta})/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y,\beta)d\beta}
+$$
 where 
-$$p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta - I_n^T}log(\boldsymbol{I_n}+exp(\boldsymbol{X\beta}))-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma^{-1}_\beta(\beta-\mu_\beta)
-}-\frac{k+1}{2}log(2\pi)-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|]$$
+$$
+p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta - I_n^T}log(\boldsymbol{I_n}+exp(\boldsymbol{X\beta}))-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma^{-1}_\beta(\beta-\mu_\beta)
+}-\frac{k+1}{2}log(2\pi)-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|]
+$$
 and the denominator is an intractable integral
 
 ## TT Example: Bayesian Logistic Regression 
 
-- It can be shown $-log(1+e^x)$ are the maxima of a family of parabolas:
-$$-log(1+e^x)=max\{A(\xi)x^2-\frac{1}{2}x+C(\xi)}$$
+- It can be shown $-\log(1+e^x)$ are the maxima of a family of parabolas:
+$$
+-\log(1+e^x)=max\{A(\xi)x^2-\frac{1}{2}x+C(\xi)\}
+$$
 
-$$A(\xi)=-tanh(\xi/2)/(4\xi)$$ 
+$$
+A(\xi)=-tanh(\xi/2)/(4\xi)
+$$
 
 and
 
-$$C(\xi)=\xi/2-log(1+e^\xi)+\xi tanh(\xi/2)/4$$
+$$
+C(\xi)=\xi/2-log(1+e^\xi)+\xi tanh(\xi/2)/4
+$$
 
 
 - above equation is a *tangent-type* representation of a convex function. 
@@ -358,12 +370,18 @@ $$C(\xi)=\xi/2-log(1+e^\xi)+\xi tanh(\xi/2)/4$$
 ## TT Example: Bayesian Logistic Regression 
 
 - Under similar derivations as the previous problem, the family of variational approximations to $\beta|y$ is:
-$$\boldsymbol{\beta|y;\xi\sim}N(\mu(\xi),\Sigma(\xi))$$
+$$
+\boldsymbol{\beta|y;\xi\sim}N(\mu(\xi),\Sigma(\xi))
+$$
 
 where
-$$\boldsymbol{\Sigma(\xi)=}[\boldsymbol{\Sigma^{-1}_\beta-2X^T}diag{A(\xi)\boldsymbol{X}}]^{-1}$$
+$$
+\boldsymbol{\Sigma(\xi)=}[\boldsymbol{\Sigma^{-1}_\beta-2X^T}diag{A(\xi)\boldsymbol{X}}]^{-1}
+$$
 and
-$$\boldsymbol{\mu(\xi)=\Sigma(\xi)\{{X^T(y-\frac{1}{2}I)+\Sigma^{-1}_\beta\mu_\beta}}\}$$
+$$
+\boldsymbol{\mu(\xi)=\Sigma(\xi)\{{X^T(y-\frac{1}{2}I)+\Sigma^{-1}_\beta\mu_\beta}}\}
+$$
 
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
