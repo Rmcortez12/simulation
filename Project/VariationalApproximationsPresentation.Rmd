@@ -22,7 +22,7 @@ pacman::p_load(pacman)
 <p>&nbsp;</p>
 - Tangent Transform Approach
 <p>&nbsp;</p>
-- Conclusions
+- Conclusion
 
 ## Introduction
 NEED STUFF HERE! VERY IMPORTANT!
@@ -41,7 +41,9 @@ $$\text{formula 2+3+4+ } p(y) > p(y;q)$$
 
 - Suppose $q$ is subject to the product restriction from the previous slide
 - It can be shown that the optimal densities satisfy 
-$$\text{formula 5}$$
+$$
+q_{i}^{*}\left(\boldsymbol{\theta}_{i}\right) \propto \exp \left\{E_{-\boldsymbol{\theta}_{i}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\}, \quad 1 \leq i \leq M
+$$
 where $E_{-\boldsymbol{\theta}_i}$ denotes the expectation of the density with $q_i$ removed
 - This leads to the algorithm on the next slide to solve for the $q_i^*$
 - Notes:
@@ -51,45 +53,103 @@ where $E_{-\boldsymbol{\theta}_i}$ denotes the expectation of the density with $
 
 ## Product Density Transforms
 
-SHOW ALGORITHM 1
+$$
+\begin{array}{l}
+\textbf{Algorithm 1}\text {  Iterative scheme for obtaining the optimal densities} \\
+\text {under product density restriction. The updates are based on the} \\
+\text {solutions given on the previous slide.} \\
+\hline \text { Initialize: } q_{2}^{*}\left(\boldsymbol{\theta}_{2}\right), \ldots, q_{M}^{*}\left(\boldsymbol{\theta}_{M}\right) . \\
+\text { Cycle: } \\
+\qquad \begin{array}{c}
+q_{1}^{*}\left(\boldsymbol{\theta}_{1}\right) \leftarrow \frac{\exp \left\{E_{-\boldsymbol{\theta}_{1}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\}}{\int \exp \left\{E_{-\boldsymbol{\theta}_{1}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\} d \boldsymbol{\theta}_{1}}, \\
+\vdots \\
+q_{M}^{*}\left(\boldsymbol{\theta}_{M}\right) \leftarrow \frac{\exp \left\{E_{-\boldsymbol{\theta}_{M}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\}}{\int \exp \left\{E_{-\boldsymbol{\theta}_{M}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\} d \boldsymbol{\theta}_{M}}
+\end{array} \\
+\text { until the increase in } \underline{p}(\mathbf{y} ; q) \text { is negligible. }
+\end{array}
+$$
 
 ## Connection with Gibbs Sampling
 
 - An alternative expression for the $q_i^*$ is 
-$$\text{formula 6 subbing in "rest"}$$
-- The distributions $\boldsymbol{\theta}_i|\text{sub in for "rest"}$ are called full conditionals in Markov Chain Monte Carlo
+$$
+q_{i}^{*}\left(\boldsymbol{\theta}_{i}\right) \propto \exp \left\{E_{-\boldsymbol{\theta}_{i}} \log p\left(\boldsymbol{\theta}_{i} \mid \text {rest}\right)\right\}
+$$
+$$
+\text{rest} \equiv \left\{\mathbf{y}, \boldsymbol{\theta}_{1}, \ldots, \boldsymbol{\theta}_{i-1}, \boldsymbol{\theta}_{i+1}, \ldots, \boldsymbol{\theta}_{M}\right\}
+$$
+- The distributions $\boldsymbol{\theta}_{i} \mid \text {rest}$ are called full conditionals in Markov Chain Monte Carlo
 - Gibbs sampling uses repeated draws from these
 - In fact, product density transforms and Gibbs are tractable in the same scenarios
 
 ## Product DT Example 1: Normal Random Sample
 
 - Objective is to approximate Bayesian inference for a random sample from a Normal distribution
-$$\text{first equation}$$
+$$
+X_{i} \mid \mu, \sigma^{2} \stackrel{\text { ind. }}{\sim} N\left(\mu, \sigma^{2}\right)
+$$
 with conjugate priors
-$$\text{second equation}$$
-- The product density transform approximation of $p(\mu,\sigma^2|\boldsymbol{x})$ is 
-$$\text{formula 8}$$
+$$
+\mu \sim N\left(\mu_{\mu}, \sigma_{\mu}^{2}\right) \quad \text { and } \quad \sigma^{2} \sim \operatorname{IG}(A, B)
+$$
+- The product density transform approximation of $p(\mu,\sigma^2\mid\boldsymbol{x})$ is 
+$$
+q\left(\mu, \sigma^{2}\right)=q_{\mu}(\mu) q_{\sigma^{2}}\left(\sigma^{2}\right)
+$$
 - The optimal densities take the form
-$$\text{next equation}$$
+$$
+q_{\mu}^{*}(\mu) \propto \exp \left[E_{\sigma^{2}}\left\{\log p\left(\mu \mid \sigma^{2}, \mathbf{x}\right)\right\}\right] \quad \text{and}
+$$
+$$
+q_{\sigma^{2}}^{*}\left(\sigma^{2}\right) \propto \exp \left[E_{\mu}\left\{\log p\left(\sigma^{2} \mid \mu, \mathbf{x}\right)\right\}\right]
+$$
 
 ## Product DT Example 1: Normal Random Sample
 
 - The resulting estimates are:
-$$q_{\sigma^2}^*(\sigma^2)\text{ is InverseGamma(...)}$$
-$$q_{\mu}^*(\mu)\text{ is Normal(...)}$$
+$$
+q_{\sigma^2}^*(\sigma^2)\text{ is InverseGamma}\left(A+\frac{n}{2}, B+\frac{1}{2} E_{\mu}\left\|\mathbf{x}-\mu \mathbf{1}_{n}\right\|^{2}\right)
+$$
+$$
+q_{\mu}^{*}(\mu) \text { is Normal}\left(\frac{n \bar{X} E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+\mu_{\mu} / \sigma_{\mu}^{2}}{n E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+1 / \sigma_{\mu}^{2}}, \frac{1}{n E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+1 / \sigma_{\mu}^{2}}\right)
+$$
 and
-$$\text{log }\underline{p}(\boldsymbol{x};q) = ...$$
+$$
+\begin{aligned}
+\log \underline{p}(\boldsymbol{x} ; q)=& \frac{1}{2}-\frac{n}{2} \log (2 \pi)+\frac{1}{2} \log \left(\sigma_{q(\mu)}^{2} / \sigma_{\mu}^{2}\right) \\
+&-\frac{\left(\mu_{q(\mu)}-\mu_{\mu}\right)^{2}+\sigma_{q(\mu)}^{2}}{2 \sigma_{\mu}^{2}} +A \log (B)\\
+&-\left(A+\frac{n}{2}\right) \log \left(B_{q\left(\sigma^{2}\right)}\right)+\log \Gamma\left(A+\frac{n}{2}\right)-\log \Gamma(A)
+\end{aligned}
+$$
 - This leads to the algorithm on the next slide
 
 ## Product DT Example 1: Normal Random Sample
 
-SHOW ALGORITHM 2
+$$
+\begin{array}{l}
+\textbf{Algorithm 2}\text{ Iterative scheme for obtaining the parameters} \\
+\text{in the optimal densities } q_{\mu}^{*} \text{ and } q_{\sigma^{2}}^{*} \text{ in the Normal random} \\
+\text{sample example.} \\
+\hline \text{ Initialize: } B_{q\left(\sigma^{2}\right)}>0 \\
+\text{ Cycle: } \\
+\qquad \begin{array}{c}
+\sigma_{q(\mu)}^{2} \leftarrow\left\{n\left(A+\frac{n}{2}\right) / B_{q\left(\sigma^{2}\right)}+1 / \sigma_{\mu}^{2}\right\}^{-1}, \\
+\mu_{q(\mu)} \leftarrow\left\{n \bar{X}\left(A+\frac{n}{2}\right) / B_{q\left(\sigma^{2}\right)}+\mu_{\mu} / \sigma_{\mu}^{2}\right\} \sigma_{q(\mu)}^{2}, \\
+B_{q\left(\sigma^{2}\right)} \leftarrow B+\frac{1}{2}\left(\left\|\mathbf{x}-\mu_{q(\mu)} \mathbf{1}_{n}\right\|^{2}+n \sigma_{q(\mu)}^{2}\right)\\
+\end{array} \\
+\text{ until the increase in } \underline{p}(\mathbf{x} ; q) \text{ is negligible.}
+\end{array}
+$$
 
 ## Product DT Example 1: Normal Random Sample
 
 - Upon convergence, the posterior densities are approximated as
-$$p(\mu|\boldsymbol{x}) \approx ...$$
-$$p(\sigma^2|\boldsymbol{x}) \approx ...$$
+$$
+p(\mu \mid \boldsymbol{x}) \approx\left\{2 \pi\left(\sigma_{q(\mu)}^{2}\right)^{*}\right\}^{-1 / 2} \exp \left[-\left(\mu-\mu_{q(\mu)}^{*}\right)^{2} /\left\{2\left(\sigma_{q(\mu)}^{2}\right)^{*}\right\}\right]
+$$
+$$
+p\left(\sigma^{2} \mid \boldsymbol{x}\right) \approx \frac{\left(B_{q\left(\sigma^{2}\right)}^{*}\right)^{A+\frac{n}{2}}}{\Gamma\left(A+\frac{n}{2}\right)}\left(\sigma^{2}\right)^{-A-\frac{n}{2}-1} \exp \left(B_{q\left(\sigma^{2}\right)}^{*} / \sigma^{2}\right), \quad \sigma^{2}>0
+$$
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Sample size $n=20$ from $N(100,225)$
   + Vague priors chosen: $\mu \sim N(0,10^8),\ \sigma^2 \sim IG(\frac{1}{100},\frac{1}{100})$
@@ -98,15 +158,16 @@ $$p(\sigma^2|\boldsymbol{x}) \approx ...$$
 
 ## Product DT Example 1: Normal Random Sample
 
-SHOW FIGURE 2
-```{r echo=FALSE, out.width='70%', fig.align='center'}
-#knitr::include_graphics('Table of selected variables.png')
+```{r echo=FALSE, out.width='100%', fig.align='center'}
+knitr::include_graphics('Figure2.png')
 ```
 
 ## Product DT Example 2: Linear Mixed Model
 
 - Objective is to approximate Bayesian inference for a random sample from a Gaussian linear mixed model
-$$\text{formula 11}$$
+$$
+\boldsymbol{y}|\boldsymbol{\beta}, \boldsymbol{u}, \boldsymbol{G}, \boldsymbol{R} \sim N(\boldsymbol{X} \boldsymbol{\beta}+\boldsymbol{Z} \boldsymbol{u}, \boldsymbol{R}), \quad \boldsymbol{u}| \boldsymbol{G} \sim N(\mathbf{0}, \boldsymbol{G})
+$$
 where 
   + $\boldsymbol{y}$ is $n \times 1$ response, 
   + $\boldsymbol{\beta}$ is $p \times 1$ fixed effects, 
@@ -114,44 +175,95 @@ where
   + $\boldsymbol{X}$ and $\boldsymbol{Z}$ are design matrices, and
   + $\boldsymbol{G}$ and $\boldsymbol{R}$ are covariance matrices
 - Conjugate priors are
-$$\text{formula 13}$$
+$$
+\boldsymbol{\beta} \sim N\left(\mathbf{0}, \sigma_{\beta}^{2} \boldsymbol{I}\right), \quad \sigma_{u \ell}^{2} \sim \operatorname{IG}\left(A_{u \ell}, B_{u \ell}\right), 1 \leq \ell \leq r, \quad \sigma_{\varepsilon}^{2} \sim \mathrm{IG}\left(A_{\varepsilon}, B_{\varepsilon}\right)
+$$
 
 ## Product DT Example 2: Linear Mixed Model
 
 - The two-component product transform is
-$$\text{formula 14}$$
+$$
+q\left(\boldsymbol{\beta}, \boldsymbol{u}, \sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2}\right)=q_{\boldsymbol{\beta}, \boldsymbol{u}}(\boldsymbol{\beta}, \boldsymbol{u}) q_{\boldsymbol{\sigma}^{2}}\left(\sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2}\right)
+$$
 - This leads to optimal densities
 $$q_{\boldsymbol{\beta},\boldsymbol{u}}^*({\boldsymbol{\beta},\boldsymbol{u}})\text{ is a Multivariate Normal density}$$
 $$q_{\boldsymbol{\sigma^2}}^*\text{ is a product of $r+1$ Inverse Gamma densities}$$
-and
-$$\text{log }\underline{p}(\boldsymbol{y};q) = ...$$
-- This leads to the algorithm on the next slide
+and...
 
 ## Product DT Example 2: Linear Mixed Model
 
-SHOW ALGORITHM 3
+$$
+\begin{array}{l}
+\log \underline{p}(\mathbf{y} ; q) \\
+=\frac{1}{2}\left(p+\sum_{\ell=1}^{r} K_{\ell}\right)-\frac{n}{2} \log (2 \pi)-\frac{p}{2} \log \left(\sigma_{\beta}^{2}\right) \\
+\quad+\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})}\right|-\frac{1}{2 \sigma_{\beta}^{2}}\left\{\left\|\boldsymbol{\mu}_{q(\boldsymbol{\beta})}\right\|^{2}+\operatorname{tr}\left(\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right)\right\} \\
+\quad+A_{\mathcal{\varepsilon}} \log \left(B_{\varepsilon}\right)-\left(A_{\varepsilon}+\frac{n}{2}\right) \log \left(B_{q\left(\sigma_{\varepsilon}^{2}\right)}\right) \\
+\quad+\log \Gamma\left(A_{\varepsilon}+\frac{n}{2}\right)-\log \Gamma\left(A_{\varepsilon}\right) \\
+\quad+\sum_{\ell=1}^{r}\left\{A_{u \ell} \log \left(B_{u \ell}\right)-\left(A_{u \ell}+\frac{K_{\ell}}{2}\right) \log \left(B_{q\left(\sigma_{u \ell}^{2}\right)}\right)\right. \\
+\left.\quad+\log \Gamma\left(A_{u \ell}+\frac{K_{\ell}}{2}\right)-\log \Gamma\left(A_{u \ell}\right)\right\}
+\end{array}
+$$
+
+- This leads to the algorithm on the next slide
+
+$$
+\begin{array}{l}
+\textbf{Algorithm 3}\text{ Iterative scheme for obtaining the parameters in the} \\
+\text{optimal densities } q_{\boldsymbol{\beta}, \boldsymbol{u}}^{*} \text{ and } q_{\boldsymbol{\sigma}^{2}}^{*} \text{ in the Bayesian linear mixed model example.} \\
+\end{array}
+$$
+
+## Product DT Example 2: Linear Mixed Model
+
+$$
+\begin{array}{l}
+\hline \text{ Initialize: } B_{q\left(\sigma_{\varepsilon}^{2}\right)}, B_{q\left(\sigma_{u 1}^{2}\right)}, \ldots, B_{q\left(\sigma_{u r}^{2}\right)}>0 \\
+\text{ Cycle: } \\
+\qquad \begin{array}{l}
+\begin{aligned}
+\boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})} \leftarrow\left\{\frac { A _ { \varepsilon } + \frac { n } { 2 } } { B _ { q ( \sigma _ { \varepsilon } ^ { 2 } ) } } \mathbf { C } ^ { T } \mathbf { C } + \text { blockdiag } \left(\sigma_{\beta}^{-2} \mathbf{I}_{p}, \frac{A_{u 1}+\frac{1}{2} K_{1}}{B_{q\left(\sigma_{u 1}^{2}\right)}} \mathbf{I}_{K_{1}}, \ldots,\right.\right.\\
+\left.\left.\frac{A_{u r}+\frac{1}{2} K_{r}}{B_{q\left(\sigma_{u r}^{2}\right)}} \mathbf{I}_{K_{r}}\right)\right\}^{-1}
+\end{aligned}\\
+\boldsymbol{\mu}_{q(\boldsymbol{\beta}, \mathbf{u})} \leftarrow\left(\frac{A_{\varepsilon}+\frac{n}{2}}{B_{q\left(\sigma_{\varepsilon}^{2}\right)}}\right) \boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})} \mathbf{C}^{T} \mathbf{y} \\
+B_{q\left(\sigma_{\varepsilon}^{2}\right)} \leftarrow B_{\varepsilon}+\frac{1}{2}\left\{\left\|\mathbf{y}-\mathbf{C} \boldsymbol{\mu}_{q(\boldsymbol{\beta}, \mathbf{u})}\right\|^{2}+\operatorname{tr}\left(\mathbf{C}^{T} \mathbf{C} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})}\right)\right\} \\
+B_{q\left(\sigma_{u \ell}^{2}\right)} \leftarrow B_{u \ell}+\frac{1}{2}\left\{\left\|\boldsymbol{\mu}_{q\left(\mathbf{u}_{\ell}\right)}\right\|^{2}+\operatorname{tr}\left(\boldsymbol{\Sigma}_{q}\left(\mathbf{u}_{\ell}\right)\right)\right\} \quad \text { for } 1 \leq \ell \leq r
+\end{array} \\
+\text{ until the increase in } \underline{p}(\mathbf{x} ; q) \text{ is negligible.}
+\end{array}
+$$
 
 ## Product DT Example 2: Linear Mixed Model
 
 - Upon convergence, the posterior densities are approximated as
-$$p(\boldsymbol{\beta},\boldsymbol{u}|\boldsymbol{y}) \approx ...$$
-$$p(\sigma^2_{u1},...,\sigma^2_{ur},\sigma^2_{\varepsilon}|\boldsymbol{y}) \approx ...$$
+$$
+\begin{array}{l}
+p(\boldsymbol{\beta}, \mathbf{u} \mid \mathbf{y}) \approx \text { the } N\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}\right) \text { density function } \\
+p\left(\sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2} \mid \boldsymbol{y}\right) \approx \\
+\quad \text { product of the }\mathrm{IG}\left(A_{u \ell}+\frac{1}{2} K_{\ell}, B_{q\left(\sigma_{u \ell}^{2}\right)}^{*}\right), 1 \leq \ell \leq r, \text { density}\\
+\quad \text { functions together with the } \mathrm{IG}\left(A_{\varepsilon}+\frac{1}{2} n, B_{q\left(\sigma_{\varepsilon}^{2}\right)}^{*}\right) \text { density function}
+\end{array}
+$$
 
 ## Product DT Example 2: Linear Mixed Model
 
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Data set is longitudinal orthodontic measurements (Pinheiro & Bates, 2000)
   + Random intercept model:
-$$\text{formulas 16}$$
+$$
+\begin{array}{l}
+\text {distance }_{i j} \mid U_{i} \stackrel{\text { ind. }}{\sim} N\left(\beta_{0}+U_{i}+\beta_{1} \text { age }_{i j}+\beta_{2} \operatorname{male}_{i}, \sigma_{\varepsilon}^{2}\right) \\
+U_{i} \mid \sigma_{u}^{2} \stackrel{\text { ind. }}{\sim} N\left(0, \sigma_{u}^{2}\right), \quad 1 \leq i \leq 27,1 \leq j \leq 4, \\
+\beta_{i} \stackrel{\text { ind. }}{\sim} N\left(0, \sigma_{\beta}^{2}\right), \quad \sigma_{u}^{2}, \sigma_{\varepsilon}^{2} \stackrel{\text { ind }}{\sim} \mathrm{IG}(A, B)
+\end{array}
+$$
   + Vague priors chosen: $\sigma^2_\beta = 10^8,\ A=B=\frac{1}{100}$
   + Compared against kernel density estimates using 1M MCMC samples
   + Convergence again quite rapid, estimates quite close to MCMC, statistical significance of all parameters
 
 ## Product DT Example 2: Linear Mixed Model
 
-SHOW FIGURE 4
-```{r echo=FALSE, out.width='70%', fig.align='center'}
-#knitr::include_graphics('Table of selected variables.png')
+```{r echo=FALSE, out.width='80%', fig.align='center'}
+knitr::include_graphics('Figure4.png')
 ```
 
 ## Parametric DT Example: Poisson Regression
@@ -229,7 +341,6 @@ $$p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta - I_n^T}log(\boldsymbol{I_
 }-\frac{k+1}{2}log(2\pi)-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|]$$
 and the denominator is an intractable integral
 
-
 ## TT Example: Bayesian Logistic Regression 
 
 - It can be shown $-log(1+e^x)$ are the maxima of a family of parabolas:
@@ -254,12 +365,18 @@ $$\boldsymbol{\Sigma(\xi)=}[\boldsymbol{\Sigma^{-1}_\beta-2X^T}diag{A(\xi)\bolds
 and
 $$\boldsymbol{\mu(\xi)=\Sigma(\xi)\{{X^T(y-\frac{1}{2}I)+\Sigma^{-1}_\beta\mu_\beta}}\}$$
 
+
+$$\text{between eq 23 and 24}$$
+- which is proportional to the Multivariate Normal
+$$eq24$$
+
+## TT Example: Bayesian Logistic Regression  
+
+- The previous equation still contains the vector of unknown variational parameters $\xi$ 
+- Set p(y,xi) as close as possible to p(y)
+- since p(y,xi) <= p(y) for all xi this reduces to maximizing p(y,xi) which can be solved numerically
+$$log\ p(y; \xi) = []$$
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
-
-
 ## Conclusion
-
-- Doesn't cover the accuracy of the approximations
-- Usefulness of the variational approximations increases as the size increases
-  - MCMC begins to become untenable
+NEED STUFF HERE! VERY IMPORTANT!
