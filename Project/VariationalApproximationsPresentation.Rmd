@@ -59,7 +59,7 @@ SHOW ALGORITHM 1
 $$\text{formula 6 subbing in "rest"}$$
 - The distributions $\boldsymbol{\theta}_i|\text{sub in for "rest"}$ are called full conditionals in Markov Chain Monte Carlo
 - Gibbs sampling uses repeated draws from these
-- In fact, product density transforms are tractable when Gibbs is
+- In fact, product density transforms and Gibbs are tractable in the same scenarios
 
 ## Product DT Example 1: Normal Random Sample
 
@@ -115,14 +115,6 @@ where
   + $\boldsymbol{G}$ and $\boldsymbol{R}$ are covariance matrices
 - Conjugate priors are
 $$\text{formula 13}$$
-
-## Product DT Example 2: Linear Mixed Model
-
-Directed Acyclic Graph (DAG) for Example 2
-SHOW FIGURE 3
-```{r echo=FALSE, out.width='70%', fig.align='center'}
-#knitr::include_graphics('Table of selected variables.png')
-```
 
 ## Product DT Example 2: Linear Mixed Model
 
