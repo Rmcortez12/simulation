@@ -22,6 +22,8 @@ pacman::p_load(pacman)
 <p>&nbsp;</p>
 - Tangent Transform Approach
 <p>&nbsp;</p>
+- Frequentist Inference
+<p>&nbsp;</p>
 - Conclusion
 
 ## Introduction
@@ -40,43 +42,43 @@ pacman::p_load(pacman)
 
 - Approximates intractable posterior densities with better known and easier to deal with densities
 - Two main types of restrictions for the $q$ density:
-  + Product Density Transforms (non-parametric)
-  + Parametric Density Transforms (parametric)
+  + **Product Density Transforms** (non-parametric)
+    + where $q(\boldsymbol{\theta})$ factorizes into $\prod_{i=1}^M q_i(\boldsymbol{\theta}_i)$, for some partition $\{\boldsymbol{\theta}_1,\ldots,\boldsymbol{\theta}_M\}$ of $\boldsymbol{\theta}$
+  + **Parametric Density Transforms** (parametric)
+    + where $q$ is a member of a parametric family of density functions
 - Guided by Kullback-Leibler(K-L) divergence
   + Provides a lower bound which can be maximized in order to minimize the K-L divergence between $q$ and $p(.|y)$
   
 ## Kullback-Leibler Divergence
 
 - Let $q$ be an arbitrary density function over $\Theta$. Then the log of the marginal likelihood satisfies
-
 $$
-\log(p(\boldsymbol{y})) \geq \int q(\theta)\log\{\frac{p(\boldsymbol{y,\theta})}{q(\boldsymbol{\theta})}\}d\boldsymbol{\theta}
+\log(p(\boldsymbol{y})) \geq \int q(\boldsymbol{\theta})\log\left\{\frac{p(\boldsymbol{y},\boldsymbol{\theta})}{q(\boldsymbol{\theta})}\right\}d\boldsymbol{\theta}
 $$
-for all densities $q$, if and only if
-
+- This arises from
 $$
-q(\boldsymbol{\theta})=p(\boldsymbol{\theta|y})
+\begin{array}{c}
+\int q(\boldsymbol{\theta})\log\left\{\frac{q(\boldsymbol{\theta})}{p(\boldsymbol{\theta} \mid \boldsymbol{y})}\right\}d\boldsymbol{\theta} \ge 0 \quad \text{for all densities }q, \\
+\text{with equality iff }q(\boldsymbol{\theta})=p(\boldsymbol{\theta \mid y}) \text{ almost everywhere (K-L)}
+\end{array}
 $$
-It follows immediately that 
-
+- It follows immediately that $p(\boldsymbol{y}) \geq \underline{p}(\boldsymbol{y};q)$, where
 $$
-p(\boldsymbol{y}) \geq \underline{p}(\boldsymbol{y};q)
+\underline{p}(\boldsymbol{y};q) \equiv \int q(\boldsymbol{\theta})\log\left\{\frac{p(\boldsymbol{y},\boldsymbol{\theta})}{q(\boldsymbol{\theta})}\right\}d\boldsymbol{\theta}
 $$
-
-where $\underline{p}(\boldsymbol{y};q)$ is the lower bound on the marginal likelihood
+is the lower bound on the marginal likelihood
 
 ## Product Density Transforms
 
 - Suppose $q$ is subject to the product restriction from the previous slide
 - It can be shown that the optimal densities satisfy 
-
 $$
 q_{i}^{*}\left(\boldsymbol{\theta}_{i}\right) \propto \exp \left\{E_{-\boldsymbol{\theta}_{i}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\}, \quad 1 \leq i \leq M
 $$
 where $E_{-\boldsymbol{\theta}_i}$ denotes the expectation of the density with $q_i$ removed
 - This leads to the algorithm on the next slide to solve for the $q_i^*$
 - Notes:
-  + Can show that convergence to at least local optima guaranteed
+  + Can show that convergence to at least local optima *guaranteed*
   + If conjugate priors used, then the $q_i^*$ updates reduce to updating parameters in a density family
   + Common to monitor convergence using $\text{log }\underline{p}(\boldsymbol{y};q)$
 
@@ -101,7 +103,6 @@ $$
 ## Connection with Gibbs Sampling
 
 - An alternative expression for the $q_i^*$ is 
-
 $$
 q_{i}^{*}\left(\boldsymbol{\theta}_{i}\right) \propto \exp \left\{E_{-\boldsymbol{\theta}_{i}} \log p\left(\boldsymbol{\theta}_{i} \mid \text {rest}\right)\right\}
 $$
@@ -144,7 +145,6 @@ $$
 q_{\mu}^{*}(\mu) \text { is Normal}\left(\frac{n \bar{X} E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+\mu_{\mu} / \sigma_{\mu}^{2}}{n E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+1 / \sigma_{\mu}^{2}}, \frac{1}{n E_{\sigma^{2}}\left(1 / \sigma^{2}\right)+1 / \sigma_{\mu}^{2}}\right)
 $$
 and
-
 $$
 \begin{aligned}
 \log \underline{p}(\boldsymbol{x} ; q)=& \frac{1}{2}-\frac{n}{2} \log (2 \pi)+\frac{1}{2} \log \left(\sigma_{q(\mu)}^{2} / \sigma_{\mu}^{2}\right) \\
@@ -152,7 +152,6 @@ $$
 &-\left(A+\frac{n}{2}\right) \log \left(B_{q\left(\sigma^{2}\right)}\right)+\log \Gamma\left(A+\frac{n}{2}\right)-\log \Gamma(A)
 \end{aligned}
 $$
-
 - This leads to the algorithm on the next slide
 
 ## Product DT Example 1: Normal Random Sample
@@ -176,15 +175,12 @@ $$
 ## Product DT Example 1: Normal Random Sample
 
 - Upon convergence, the posterior densities are approximated as
-
 $$
 p(\mu \mid \boldsymbol{x}) \approx\left\{2 \pi\left(\sigma_{q(\mu)}^{2}\right)^{*}\right\}^{-1 / 2} \exp \left[-\left(\mu-\mu_{q(\mu)}^{*}\right)^{2} /\left\{2\left(\sigma_{q(\mu)}^{2}\right)^{*}\right\}\right]
 $$
-
 $$
 p\left(\sigma^{2} \mid \boldsymbol{x}\right) \approx \frac{\left(B_{q\left(\sigma^{2}\right)}^{*}\right)^{A+\frac{n}{2}}}{\Gamma\left(A+\frac{n}{2}\right)}\left(\sigma^{2}\right)^{-A-\frac{n}{2}-1} \exp \left(B_{q\left(\sigma^{2}\right)}^{*} / \sigma^{2}\right), \quad \sigma^{2}>0
 $$
-
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Sample size $n=20$ from $N(100,225)$
   + Vague priors chosen: $\mu \sim N(0,10^8),\ \sigma^2 \sim IG(\frac{1}{100},\frac{1}{100})$
@@ -200,20 +196,16 @@ knitr::include_graphics('Figure2.png')
 ## Product DT Example 2: Linear Mixed Model
 
 - Objective is to approximate Bayesian inference for a random sample from a Gaussian linear mixed model
-
 $$
 \boldsymbol{y}|\boldsymbol{\beta}, \boldsymbol{u}, \boldsymbol{G}, \boldsymbol{R} \sim N(\boldsymbol{X} \boldsymbol{\beta}+\boldsymbol{Z} \boldsymbol{u}, \boldsymbol{R}), \quad \boldsymbol{u}| \boldsymbol{G} \sim N(\mathbf{0}, \boldsymbol{G})
 $$
-
 where 
-
   + $\boldsymbol{y}$ is $n \times 1$ response, 
   + $\boldsymbol{\beta}$ is $p \times 1$ fixed effects, 
   + $\boldsymbol{u}$ is random effects,
   + $\boldsymbol{X}$ and $\boldsymbol{Z}$ are design matrices, and
   + $\boldsymbol{G}$ and $\boldsymbol{R}$ are covariance matrices
 - Conjugate priors are
-
 $$
 \boldsymbol{\beta} \sim N\left(\mathbf{0}, \sigma_{\beta}^{2} \boldsymbol{I}\right), \quad \sigma_{u \ell}^{2} \sim \operatorname{IG}\left(A_{u \ell}, B_{u \ell}\right), 1 \leq \ell \leq r, \quad \sigma_{\varepsilon}^{2} \sim \mathrm{IG}\left(A_{\varepsilon}, B_{\varepsilon}\right)
 $$
@@ -224,9 +216,7 @@ $$
 $$
 q\left(\boldsymbol{\beta}, \boldsymbol{u}, \sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2}\right)=q_{\boldsymbol{\beta}, \boldsymbol{u}}(\boldsymbol{\beta}, \boldsymbol{u}) q_{\boldsymbol{\sigma}^{2}}\left(\sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2}\right)
 $$
-
 - This leads to optimal densities
-
 $$q_{\boldsymbol{\beta},\boldsymbol{u}}^*({\boldsymbol{\beta},\boldsymbol{u}})\text{ is a Multivariate Normal density}$$
 $$q_{\boldsymbol{\sigma^2}}^*\text{ is a product of r+1 Inverse Gamma densities}$$
 and...
@@ -245,7 +235,7 @@ $$
 \end{array}
 $$
 
-- This leads to the algorithm on the next slide
+- This leads to the algorithm below and on the next slide
 
 $$
 \begin{array}{l}
@@ -278,7 +268,7 @@ $$
 - Upon convergence, the posterior densities are approximated as
 $$
 \begin{array}{l}
-p(\boldsymbol{\beta}, \mathbf{u} \mid \mathbf{y}) \approx \text { the } N\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}\right) \text { density function } \\
+p(\boldsymbol{\beta}, \mathbf{u} \mid \mathbf{y}) \approx \text { the } N\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta}, \mathbf{u})}^{*}\right) \text { density function } \\ \\
 p\left(\sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2} \mid \boldsymbol{y}\right) \approx \\
 \quad \text { product of the }\mathrm{IG}\left(A_{u \ell}+\frac{1}{2} K_{\ell}, B_{q\left(\sigma_{u \ell}^{2}\right)}^{*}\right), 1 \leq \ell \leq r, \text { density}\\
 \quad \text { functions together with the } \mathrm{IG}\left(A_{\varepsilon}+\frac{1}{2} n, B_{q\left(\sigma_{\varepsilon}^{2}\right)}^{*}\right) \text { density function}
@@ -290,7 +280,6 @@ $$
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Data set is longitudinal orthodontic measurements (Pinheiro & Bates, 2000)
   + Random intercept model:
-
 $$
 \begin{array}{l}
 \text {distance }_{i j} \mid U_{i} \stackrel{\text { ind. }}{\sim} N\left(\beta_{0}+U_{i}+\beta_{1} \text { age }_{i j}+\beta_{2} \operatorname{male}_{i}, \sigma_{\varepsilon}^{2}\right) \\
@@ -314,24 +303,22 @@ knitr::include_graphics('Figure4.png')
   + Belongs to a specific parametric family that (hopefully) results in a more tractable approximation to the posterior density
 - Poisson Regression with Gaussian Transform example
   + Consider the Bayesian Poisson regression model: 
-  
 $$
 Y_i|\beta_0...\beta_k \sim Poisson(exp(\beta_0+\beta_1x_{1i}+...+\beta_1x_{ki}))
 $$
 with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
-  
-- The likelihood leads to an integral that has no closed form solution (intractable):
+  + The marginal likelihood contains an integral that has no closed form solution (intractable):
 $$
 \begin{array}{l}
-p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2}\\\times\int_{\mathbb{R}^{k+1}}exp\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)
-\\-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma_\beta}^{-1}(\boldsymbol{\beta-\mu_\beta})\}d\boldsymbol{\beta}
+p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2} \\
+\quad\quad\times\int_{\mathbb{R}^{k+1}}\exp\left\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_n\log(\boldsymbol{y}!) \right. \\
+\left. \quad\quad-\frac{1}{2}\left(\boldsymbol{\beta-\mu_\beta}\right)^T\boldsymbol{\Sigma_\beta}^{-1}\left(\boldsymbol{\beta-\mu_\beta}\right)\right\}d\boldsymbol{\beta}
 \end{array}
 $$
 
 ## Parametric DT Example: Poisson Regression
 
 - Take $q \sim N(\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})$
-
 $$
 \begin{array}{l}
 q(\boldsymbol{\beta};\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) \\
@@ -364,18 +351,14 @@ $$
 $$
 \log (x)=\min _{\xi>0}\{\xi x-\log (\xi)-1\}, \quad \text { for all } x>0
 $$
-
 - The representation implies
-
-$$log(x) \leq \xi x - log(\xi)-1 \text{ for all } \xi > 0$$
-
+$$\log(x) \leq \xi x - \log(\xi)-1, \quad \text{ for all } \xi > 0$$
 
 ## Tangent Transform Approach
 
-```{r echo=FALSE, out.width='70%', fig.align='center'}
+```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('Figure7.png')
 ```
-
 
 ## TT Example: Bayesian Logistic Regression
 
@@ -383,9 +366,8 @@ knitr::include_graphics('Figure7.png')
 $$
 Y_i|\beta_0,...,\beta_k \stackrel{\text { ind. }}{\sim} \text{Bernoulli}\left([1+\exp\left\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\right\}]^{-1}\right)
 $$
-- with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
-- the posterior density of $\boldsymbol{\beta}$ is 
-
+with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
+- The posterior density of $\boldsymbol{\beta}$ is 
 $$
 \left. p(\boldsymbol{\beta}\mid\boldsymbol{y})=p(\boldsymbol{y},\boldsymbol{\beta}) \middle/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y},\boldsymbol{\beta})d\boldsymbol{\beta} \right.
 $$
@@ -405,9 +387,8 @@ and the denominator is an intractable integral
 $$
 -\log \left(1+e^{x}\right)=\max _{\xi \in \mathbb{R}}\left\{A(\xi) x^{2}-\frac{1}{2} x+C(\xi)\right\} \quad \text { for all } x \in \mathbb{R}
 $$
-
 - This is a *tangent-type* representation of a convex function 
-- From here the derivations proceed similarly to the previous example
+- From here the derivations proceed similarly to the previous examples
 
 ## Frequentist Inference
 
