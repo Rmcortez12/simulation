@@ -30,12 +30,29 @@ NEED STUFF HERE! VERY IMPORTANT!
 ## Density Transform Approach
 
 - Approximates intractable posterior densities with better known and easier to deal with densities
-- Guided by Kullback-Leibler divergence
-$$\text{formula 2+3+4+ } p(y) > p(y;q)$$
-  - provides a lower bound which can be maximized in order to minimize the k-l divergence between q and p(.|y)
 - Two main types of restrictions for the $q$ density:
   + Product Density Transforms (non-parametric)
   + Parametric Density Transforms (parametric)
+- Guided by Kullback-Leibler(K-L) divergence
+  - provides a lower bound which can be maximized in order to minimize the K-L divergence between q and p(.|y)
+  
+## Kullback-Leibler Divergence
+
+- Let $q$ be an arbitrary density function over $\Theta$. Then the log of the marginal likelihood satisfies: 
+
+$$
+log(p(\boldsymbol{y})) \geq \int q(\theta)log\{\frac{p(\boldsymbol{y,\theta})}{q(\boldsymbol{\theta})}\}d\boldsymbol{\theta}$$
+
+- for all densities q, if and only if
+
+$$q(\boldsymbol{\theta})=p(\boldsymbol{\theta|y})$$
+- it follows immediately that 
+
+$$
+p(\boldsymbol{y}) \geq \underline{p}(\boldsymbol{y};q)
+$$
+- where $\underline{p}(\boldsymbol{y};q)$ is the lower bound on the marginal likelihood
+
 
 ## Product Density Transforms
 
@@ -249,6 +266,7 @@ $$
 - Next slide's plots compare product density variational approximations with exact posterior density
   + Data set is longitudinal orthodontic measurements (Pinheiro & Bates, 2000)
   + Random intercept model:
+
 $$
 \begin{array}{l}
 \text {distance }_{i j} \mid U_{i} \stackrel{\text { ind. }}{\sim} N\left(\beta_{0}+U_{i}+\beta_{1} \text { age }_{i j}+\beta_{2} \operatorname{male}_{i}, \sigma_{\varepsilon}^{2}\right) \\
@@ -273,27 +291,36 @@ knitr::include_graphics('Figure4.png')
 - Poisson Regression with Gaussian Transform example: 
   - Consider the Bayesian Poisson Regression Model: 
   
-  $$Y_i|\beta_0...$$
+  $$Y_i|\beta_0...\beta_k \sim Poisson(exp(\beta_0+\beta_1x_{1i}+...+\beta_1x_{ki}))$$
   - With priors on the coefficient vector of $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$
   
 ## Parametric DT Example: Poisson Regression
 
 - The likelihood is
 
-$$p(y|\beta)=$$
+$$p(\boldsymbol{y|\beta})=exp\{\boldsymbol{y}^T\boldsymbol{X\beta-I}_n^Texp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)\}$$
 
 - This leads to an integral that has no closed form solution (intractable):
 
-$$\text{marginal likelihood}$$
+$$
+\begin{array}{l}
+p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2}\\*\int_{\mathbb{R}^{k+1}}exp\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)
+\\-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma_\beta}^{-1}(\boldsymbol{\beta-\mu_\beta})\}d\boldsymbol{\beta}
+\end{array}
+$$
 
 ## Parametric DT Example: Poisson Regression
 
 - Take $q \sim N(\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})$
+
 $$
+\begin{array}{l}
 q(\boldsymbol{\beta;\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) =
 (2\pi)^{-p/2}|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|^{-1/2}*exp\{-\frac{1}{2}(\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})^T \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^{-1} (\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})\}
+\end{array}
 $$
 - Then the lower bound as defined earlier gives explicitly
+
 $$
 \begin{aligned}
 \log \underline{p} &\left(\mathbf{y} ; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
@@ -304,17 +331,19 @@ $$
 \end{aligned}
 $$
 
+## Parametric DT Example: Poisson Regression
+
 - From earlier,
 $$
 \log p(y) \geq \log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)}})
 $$
 - The optimal variational parameters are found through maximizing this inequality using Newton-Raphson iteration
-- This minimizes the K-L divergence and provides the optimal Gaussian density transform $q^*$
+- This minimizes the K-L divergence and provides the optimal Gaussian density transform $q^*$ as $N(\boldsymbol{\mu}^*_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^*)$
 
 ## Tangent Transform Approach
   
 - Not all variational approximations fit into Kullback-Leibler divergence framework
-- Tangent transforms work with *tangent-type* representations of concave/convex functions
+- Tangent transforms work with *tangent-type* representations of concave/convex functions (Underpinned by Theory of Convex Duality)
 $$
 log(x) = min\{\xi x -log(\xi)-1\} \text{ for all x> 0}
 $$
@@ -322,7 +351,6 @@ $$
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 knitr::include_graphics('Figure7.png')
 ```
-- Underpinned by theory of *convex duality*
 
 ## TT Example: Bayesian Logistic Regression
 
@@ -342,8 +370,11 @@ p(\boldsymbol{\beta|y})=p(\boldsymbol{y,\beta})/ \int_ {\mathbb{R}^{k+1}}p(\bold
 $$
 where 
 $$
-p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta - I_n^T}log(\boldsymbol{I_n}+exp(\boldsymbol{X\beta}))-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma^{-1}_\beta(\beta-\mu_\beta)
+\begin{array}{l}
+p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta -I_n^T}log(\boldsymbol{I_n}+exp(\boldsymbol{X\beta}))
+\\-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma^{-1}_\beta(\beta-\mu_\beta)
 }-\frac{k+1}{2}log(2\pi)-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|]
+\end{array}
 $$
 and the denominator is an intractable integral
 
@@ -357,8 +388,6 @@ $$
 $$
 A(\xi)=-tanh(\xi/2)/(4\xi)
 $$
-
-and
 
 $$
 C(\xi)=\xi/2-log(1+e^\xi)+\xi tanh(\xi/2)/4
@@ -386,6 +415,8 @@ $$
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
 ## Conclusion
+
 - Doesn't cover the accuracy of the approximations
+  - makes it hard to compare with MCMC
 - Usefulness of the variational approximations increases as the size increases
   - MCMC begins to become untenable
