@@ -25,7 +25,16 @@ pacman::p_load(pacman)
 - Conclusion
 
 ## Introduction
-NEED STUFF HERE! VERY IMPORTANT!
+
+- Variational Approximations 
+  - deterministic techniques for making approximate inference for parameters in complex models
+  - Much faster
+  - Limited in Accuracy
+
+- Star of the show in Computer Science
+- Monte Carlo has preference in Statistics
+- Greater for Bayesian Inference
+
 
 ## Density Transform Approach
 
@@ -46,11 +55,13 @@ log(p(\boldsymbol{y})) \geq \int q(\theta)log\{\frac{p(\boldsymbol{y,\theta})}{q
 - for all densities q, if and only if
 
 $$q(\boldsymbol{\theta})=p(\boldsymbol{\theta|y})$$
+
 - it follows immediately that 
 
 $$
 p(\boldsymbol{y}) \geq \underline{p}(\boldsymbol{y};q)
 $$
+
 - where $\underline{p}(\boldsymbol{y};q)$ is the lower bound on the marginal likelihood
 
 
