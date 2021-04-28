@@ -34,25 +34,23 @@ NEED STUFF HERE! VERY IMPORTANT!
   + Product Density Transforms (non-parametric)
   + Parametric Density Transforms (parametric)
 - Guided by Kullback-Leibler(K-L) divergence
-  - provides a lower bound which can be maximized in order to minimize the K-L divergence between q and p(.|y)
+  + Provides a lower bound which can be maximized in order to minimize the K-L divergence between $q$ and $p(.|y)$
   
 ## Kullback-Leibler Divergence
 
-- Let $q$ be an arbitrary density function over $\Theta$. Then the log of the marginal likelihood satisfies: 
-
+- Let $q$ be an arbitrary density function over $\Theta$. Then the log of the marginal likelihood satisfies
 $$
-log(p(\boldsymbol{y})) \geq \int q(\theta)log\{\frac{p(\boldsymbol{y,\theta})}{q(\boldsymbol{\theta})}\}d\boldsymbol{\theta}$$
-
-- for all densities q, if and only if
-
-$$q(\boldsymbol{\theta})=p(\boldsymbol{\theta|y})$$
-- it follows immediately that 
-
+\log(p(\boldsymbol{y})) \geq \int q(\theta)\log\{\frac{p(\boldsymbol{y,\theta})}{q(\boldsymbol{\theta})}\}d\boldsymbol{\theta}
+$$
+for all densities $q$, if and only if
+$$
+q(\boldsymbol{\theta})=p(\boldsymbol{\theta|y})
+$$
+It follows immediately that 
 $$
 p(\boldsymbol{y}) \geq \underline{p}(\boldsymbol{y};q)
 $$
-- where $\underline{p}(\boldsymbol{y};q)$ is the lower bound on the marginal likelihood
-
+where $\underline{p}(\boldsymbol{y};q)$ is the lower bound on the marginal likelihood
 
 ## Product Density Transforms
 
@@ -287,24 +285,24 @@ knitr::include_graphics('Figure4.png')
 ## Parametric DT Example: Poisson Regression
 
 - Now assume $q$ is subject to the parametric restriction
-  - Belongs to a specific parametric family that (hopefully) results in a more tractable approximation to the posterior density
-- Poisson Regression with Gaussian Transform example: 
-  - Consider the Bayesian Poisson Regression Model: 
-  
-  $$Y_i|\beta_0...\beta_k \sim Poisson(exp(\beta_0+\beta_1x_{1i}+...+\beta_1x_{ki}))$$
-  - With priors on the coefficient vector of $\beta$ ~ $N(\mu_\beta,\Sigma_\beta)$
+  + Belongs to a specific parametric family that (hopefully) results in a more tractable approximation to the posterior density
+- Poisson Regression with Gaussian Transform example
+  + Consider the Bayesian Poisson regression model: 
+$$
+Y_i|\beta_0...\beta_k \sim Poisson(exp(\beta_0+\beta_1x_{1i}+...+\beta_1x_{ki}))
+$$
+with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
   
 ## Parametric DT Example: Poisson Regression
 
 - The likelihood is
-
-$$p(\boldsymbol{y|\beta})=exp\{\boldsymbol{y}^T\boldsymbol{X\beta-I}_n^Texp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)\}$$
-
+$$
+p(\boldsymbol{y|\beta})=exp\{\boldsymbol{y}^T\boldsymbol{X\beta-I}_n^Texp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)\}
+$$
 - This leads to an integral that has no closed form solution (intractable):
-
 $$
 \begin{array}{l}
-p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2}\\*\int_{\mathbb{R}^{k+1}}exp\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)
+p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2}\\\times\int_{\mathbb{R}^{k+1}}exp\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_nlog(\boldsymbol{y}!)
 \\-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma_\beta}^{-1}(\boldsymbol{\beta-\mu_\beta})\}d\boldsymbol{\beta}
 \end{array}
 $$
@@ -312,22 +310,19 @@ $$
 ## Parametric DT Example: Poisson Regression
 
 - Take $q \sim N(\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})$
-
 $$
 \begin{array}{l}
-q(\boldsymbol{\beta;\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) =
-(2\pi)^{-p/2}|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|^{-1/2}*exp\{-\frac{1}{2}(\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})^T \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^{-1} (\boldsymbol{\beta-\mu}_{q(\boldsymbol{\beta})})\}
+q(\boldsymbol{\beta};\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) \\
+\quad=(2\pi)^{-p/2}|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|^{-1/2}\exp\left\{-\frac{1}{2}(\boldsymbol{\beta}-\boldsymbol{\mu}_{q(\boldsymbol{\beta})})^T \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^{-1} (\boldsymbol{\beta}-\boldsymbol{\mu}_{q(\boldsymbol{\beta})})\right\}
 \end{array}
 $$
 - Then the lower bound as defined earlier gives explicitly
-
 $$
 \begin{aligned}
 \log \underline{p} &\left(\mathbf{y} ; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
-=& \mathbf{y}^{T} \mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\mathbf{1}_{n}^{T} \exp \left\{\mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}+\frac{1}{2} \operatorname{diagonal}\left(\mathbf{X} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})} \mathbf{X}^{T}\right)\right\} \\
+&= \mathbf{y}^{T} \mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\mathbf{1}_{n}^{T} \exp \left\{\mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}+\frac{1}{2} \operatorname{diagonal}\left(\mathbf{X} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})} \mathbf{X}^{T}\right)\right\} \\
 &-\frac{1}{2}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)^{T} \boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)-\frac{1}{2} \operatorname{tr}\left(\boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
-&+\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right|-\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{\boldsymbol{\beta}}\right|+\frac{k+1}{2} \\
-&-\mathbf{1}_{n}^{T} \log (\mathbf{y} !)
+&+\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right|-\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{\boldsymbol{\beta}}\right|+\frac{k+1}{2} -\mathbf{1}_{n}^{T} \log (\mathbf{y} !)
 \end{aligned}
 $$
 
@@ -335,7 +330,7 @@ $$
 
 - From earlier,
 $$
-\log p(y) \geq \log \underline{p}(\boldsymbol{y; \mu_{q(\beta)}, \Sigma_{q(\beta)}})
+\log p(\boldsymbol{y}) \geq \log \underline{p}(\boldsymbol{y}; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta)}})
 $$
 - The optimal variational parameters are found through maximizing this inequality using Newton-Raphson iteration
 - This minimizes the K-L divergence and provides the optimal Gaussian density transform $q^*$ as $N(\boldsymbol{\mu}^*_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^*)$
@@ -343,9 +338,9 @@ $$
 ## Tangent Transform Approach
   
 - Not all variational approximations fit into Kullback-Leibler divergence framework
-- Tangent transforms work with *tangent-type* representations of concave/convex functions (Underpinned by Theory of Convex Duality)
+- Tangent transforms work with *tangent-type* representations of concave/convex functions (underpinned by theory of convex duality)
 $$
-log(x) = min\{\xi x -log(\xi)-1\} \text{ for all x> 0}
+\log (x)=\min _{\xi>0}\{\xi x-\log (\xi)-1\}, \quad \text { for all } x>0
 $$
 
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
@@ -356,24 +351,23 @@ knitr::include_graphics('Figure7.png')
 
 - Consider Bayesian logistic regression model
 $$
-Y_i|\beta_0,...,\beta_k\sim Bernoulli([1+exp\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\}]^{-1}), \text{ }1\leq i \leq n
+Y_i|\beta_0,...,\beta_k \stackrel{\text { ind. }}{\sim} \text{Bernoulli}\left([1+\exp\left\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\right\}]^{-1}\right)
 $$
-
-- With priors on the coefficient vector of $\beta \sim N(\mu_\beta,\Sigma_\beta)$
+with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
 - The likelihood is
 $$
-p(\boldsymbol{y|\beta)}=exp[\boldsymbol{y^TX\beta-I^T_n}log\{I_n+exp(\boldsymbol{X\beta})\}]
+p(\boldsymbol{y\mid\beta)}=exp[\boldsymbol{y^TX\beta-I^T_n}log\{I_n+exp(\boldsymbol{X\beta})\}]
 $$
-and the posterior density of $\beta$ is 
+and the posterior density of $\boldsymbol{\beta}$ is 
 $$
-p(\boldsymbol{\beta|y})=p(\boldsymbol{y,\beta})/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y,\beta)d\beta}
+\left. p(\boldsymbol{\beta}\mid\boldsymbol{y})=p(\boldsymbol{y},\boldsymbol{\beta}) \middle/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y},\boldsymbol{\beta})d\boldsymbol{\beta} \right.
 $$
 where 
 $$
 \begin{array}{l}
-p(y|\beta) = exp[\boldsymbol{y}^T\boldsymbol{X\beta -I_n^T}log(\boldsymbol{I_n}+exp(\boldsymbol{X\beta}))
-\\-\frac{1}{2}(\boldsymbol{\beta-\mu_\beta})^T\boldsymbol{\Sigma^{-1}_\beta(\beta-\mu_\beta)
-}-\frac{k+1}{2}log(2\pi)-\frac{1}{2}log|\boldsymbol{\Sigma_\beta}|]
+p(\boldsymbol{y}\mid\boldsymbol{\beta}) = \exp\left[\boldsymbol{y}^T\boldsymbol{X\beta} -\boldsymbol{1}_n^T \log\left\{\boldsymbol{1}_n+\exp(\boldsymbol{X\beta})\right\} \right.
+\\ \quad\quad\left. -\frac{1}{2}(\boldsymbol{\beta}-\boldsymbol{\mu_\beta})^T \boldsymbol{\Sigma_\beta}^{-1} (\boldsymbol{\beta}-\boldsymbol{\mu_\beta})
+-\frac{k+1}{2}\log(2\pi)-\frac{1}{2}\log|\boldsymbol{\Sigma_\beta}|\right]
 \end{array}
 $$
 and the denominator is an intractable integral
@@ -382,19 +376,15 @@ and the denominator is an intractable integral
 
 - It can be shown $-\log(1+e^x)$ are the maxima of a family of parabolas:
 $$
--\log(1+e^x)=max\{A(\xi)x^2-\frac{1}{2}x+C(\xi)\}
+-\log \left(1+e^{x}\right)=\max _{\xi \in \mathbb{R}}\left\{A(\xi) x^{2}-\frac{1}{2} x+C(\xi)\right\} \quad \text { for all } x \in \mathbb{R}
 $$
-
 $$
 A(\xi)=-tanh(\xi/2)/(4\xi)
 $$
-
 $$
 C(\xi)=\xi/2-log(1+e^\xi)+\xi tanh(\xi/2)/4
 $$
-
-
-- above equation is a *tangent-type* representation of a convex function. 
+- This is a *tangent-type* representation of a convex function 
 
 ## TT Example: Bayesian Logistic Regression 
 
@@ -414,9 +404,14 @@ $$
 
 - Note: Jaakkola and Jordan derived a simpler and quicker algorithm for maximizing numerically based on Expectation Maximization
 
+## Frequentist Inference
+
+- Frequentist problems that can benefit from variational approximations are rare
+
 ## Conclusion
 
-- Doesn't cover the accuracy of the approximations
-  - makes it hard to compare with MCMC
-- Usefulness of the variational approximations increases as the size increases
-  - MCMC begins to become untenable
+- The article's stated goal is to increase statistician's familiarity with variational approximations
+- Potential to become major player
+  + New methods emerging continually
+  + Usefulness increases with problem size, where MCMC becomes untenable
+- Does not address accuracy of variational approximations
