@@ -16,14 +16,14 @@ pacman::p_load(pacman)
 
 ## Outline
 
+"Explaining Variational Approximations"  
+<br>J. T. Ormerod and M. P. Wand  
+<br>*The American Statistician*, May 2010, Vol. 64, No. 2, pp. 140-153
+<p>&nbsp;</p>
 - Introduction
-<p>&nbsp;</p>
 - Density Transform Approach
-<p>&nbsp;</p>
 - Tangent Transform Approach
-<p>&nbsp;</p>
 - Frequentist Inference
-<p>&nbsp;</p>
 - Conclusion
 
 ## Introduction
@@ -40,10 +40,10 @@ pacman::p_load(pacman)
 ## Introduction
 
 - What are Variational Approximations?
+  + Name derives from variational calculus
   + Deterministic techniques for approximate inference for parameters in complex models
   + Much faster than Monte Carlo, richer class of methods than Laplace
   + Limited in accuracy -- cannot just increase sample size as in MCMC
-  + Name derives from variational calculus
   + Most applicable for Bayesian Inference (like MCMC)
 <p>&nbsp;</p>
 - Objective is to explain variational approximation in statistical terms
@@ -80,7 +80,7 @@ is the lower bound on the marginal likelihood
 
 ## Product Density Transforms
 
-- Suppose $q$ is subject to the product restriction from the previous slide
+- Suppose $q$ is subject to the product restriction, where $q(\boldsymbol{\theta})$ factorizes into $\prod_{i=1}^M q_i(\boldsymbol{\theta}_i)$, for some partition $\{\boldsymbol{\theta}_1,\ldots,\boldsymbol{\theta}_M\}$ of $\boldsymbol{\theta}$
 - It can be shown that the optimal densities satisfy 
 $$
 q_{i}^{*}\left(\boldsymbol{\theta}_{i}\right) \propto \exp \left\{E_{-\boldsymbol{\theta}_{i}} \log p(\mathbf{y}, \boldsymbol{\theta})\right\}, \quad 1 \leq i \leq M
@@ -384,7 +384,7 @@ $$
 where 
 $$
 \begin{array}{l}
-p(\boldsymbol{y}\mid\boldsymbol{\beta}) = \exp\left[\boldsymbol{y}^T\boldsymbol{X\beta} -\boldsymbol{1}_n^T \log\left\{\boldsymbol{1}_n+\exp(\boldsymbol{X\beta})\right\} \right.
+p(\boldsymbol{y},\boldsymbol{\beta}) = \exp\left[\boldsymbol{y}^T\boldsymbol{X\beta} -\boldsymbol{1}_n^T \log\left\{\boldsymbol{1}_n+\exp(\boldsymbol{X\beta})\right\} \right.
 \\ \quad\quad\left. -\frac{1}{2}(\boldsymbol{\beta}-\boldsymbol{\mu_\beta})^T \boldsymbol{\Sigma_\beta}^{-1} (\boldsymbol{\beta}-\boldsymbol{\mu_\beta})
 -\frac{k+1}{2}\log(2\pi)-\frac{1}{2}\log|\boldsymbol{\Sigma_\beta}|\right]
 \end{array}
