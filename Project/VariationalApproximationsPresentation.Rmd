@@ -28,15 +28,25 @@ pacman::p_load(pacman)
 
 ## Introduction
 
-- Variational Approximations 
-  - deterministic techniques for making approximate inference for parameters in complex models
-  - Much faster
-  - Limited in Accuracy
+- Variational approximations are mainstream in Computer Science
+  + Speech recognition
+  + Document retrieval
+  + Genetic linkage analysis
+<p>&nbsp;</p>
+- Monte Carlo dominates in Statistics
+  + Alternative is often Laplace approximation
+  + Variational approximations not well known
 
-- Star of the show in Computer Science
-- Monte Carlo has preference in Statistics
-- Greater for Bayesian Inference
+## Introduction
 
+- What are Variational Approximations?
+  + Deterministic techniques for approximate inference for parameters in complex models
+  + Much faster than Monte Carlo, richer class of methods than Laplace
+  + Limited in accuracy -- cannot just increase sample size as in MCMC
+  + Name derives from variational calculus
+  + Most applicable for Bayesian Inference (like MCMC)
+<p>&nbsp;</p>
+- Objective is to explain variational approximation in statistical terms
 
 ## Density Transform Approach
 
@@ -47,7 +57,7 @@ pacman::p_load(pacman)
   + **Parametric Density Transforms** (parametric)
     + where $q$ is a member of a parametric family of density functions
 - Guided by Kullback-Leibler(K-L) divergence
-  + Provides a lower bound which can be maximized in order to minimize the K-L divergence between $q$ and $p(.|y)$
+  + Provides a lower bound which can be maximized in order to minimize the K-L divergence between $q$ and $p(\cdot \mid y)$
   
 ## Kullback-Leibler Divergence
 
