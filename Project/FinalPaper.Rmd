@@ -2,15 +2,14 @@
 title: "Variational Approximations"
 author: "Ricardo Cortez and Ben Graf"
 date: "4/29/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-- do we want to include the other examples in the paper??
-  -- I say no 
 
 
 # Introduction
@@ -20,9 +19,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Density Transform Approach
 
-In general variational approximations derive a lower bound, and then iteratively approximate the parameters of a conditional function with guidance from measuring the distance between the approximations and the lower bound. The Density Transform Approach attempts to approximate the posterior densities, in a Bayesian context, by other densities in which a more tractable is found. There are two main approaches in selecting the approximating density the first is *Product Density Transform* and the second is *Parametric Density Transform*. Both of these transforms are guided by the Kullback-Leibler Divergence (Distance). 
+In general variational approximations derive a lower bound, and then iteratively approximate the parameters of a conditional function with guidance from measuring the distance between the approximations and the lower bound. The Density Transform Approach attempts to approximate the posterior densities, in a Bayesian context, by other densities ($q(\theta)$) in which a more tractable is found. There are two main approaches in selecting the approximating density the first is *Product Density Transform* and the second is *Parametric Density Transform*. The product density approach is a non-parametric approach where $q(\theta)$ factorizes into $\Pi^M_{i=1}q_i(\theta_i)$ for some partition $\{\theta_i,...,\theta_m\}$ of $\theta$. The parametric density approach is selecting a well known and easily dealt with density in an attemp to make the posterior density more tractable. Both of these transforms are guided by the minimization of the Kullback-Leibler Divergence (Distance). 
 
 ## Kullback-Leibler Divergence
+
+The Kullback-Leibler Divergence (K-L) measures how divergent (the distance) one density is from another density. From K-L it is guaranteed that the log of the marginal likelihood satisfies
+
+$$
+\log(p(\boldsymbol{y})) \geq \int q(\boldsymbol{\theta})\log\left\{\frac{p(\boldsymbol{y},\boldsymbol{\theta})}{q(\boldsymbol{\theta})}\right\}d\boldsymbol{\theta}
+$$
+This arises from the fact 
+$$
+\begin{array}{c}
+\int q(\boldsymbol{\theta})\log\left\{\frac{q(\boldsymbol{\theta})}{p(\boldsymbol{\theta} \mid \boldsymbol{y})}\right\}d\boldsymbol{\theta} \ge 0 \quad 
+\end{array}
+$$
+for all densities q, with equality if and only if 
+$$
+\begin{array}{c}
+q(\boldsymbol{\theta})=p(\boldsymbol{\theta \mid y}) \text{ almost everywhere }
+\end{array}
+$$
+The integral above is the actual K-L which will be minimized in order to obtain the optimal parameters for the approximating density $q(\theta)$. 
 
 ## Product Density Transforms
 
@@ -34,13 +52,115 @@ In general variational approximations derive a lower bound, and then iteratively
 
 # Parametric Density Transform
 
+Recall the parametric density transform selects a distribution $q(\theta)$ that belongs to a known parametric family in an attempt to achieve a more tractable posterior density. This is best shown in the next example. 
+
 ### Parametric Density Transform Example: Poisson Regression
+
+The example in the text is a Poisson Regression with a Gaussian Transform. Where the Bayesian Poisson regression model is given by: 
+
+$$
+Y_i|\beta_0...\beta_k \sim Poisson(exp(\beta_0+\beta_1x_{1i}+...+\beta_1x_{ki}))
+$$
+
+and the prior distributions on $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$
+
+As seen before the marginal likelihood contains an integral that is intractable. 
+
+$$
+\begin{array}{l}
+p(\boldsymbol{y})= (2\pi)^{-(k+1)/2}|\boldsymbol{\Sigma_\beta}|^{-1/2} \\
+\quad\quad\times\int_{\mathbb{R}^{k+1}}\exp\left\{\boldsymbol{y}^T\boldsymbol{X\beta}-\boldsymbol{I}_n^T exp(\boldsymbol{X\beta})-\boldsymbol{I}^T_n\log(\boldsymbol{y}!) \right. \\
+\left. \quad\quad-\frac{1}{2}\left(\boldsymbol{\beta-\mu_\beta}\right)^T\boldsymbol{\Sigma_\beta}^{-1}\left(\boldsymbol{\beta-\mu_\beta}\right)\right\}d\boldsymbol{\beta}
+\end{array}
+$$
+
+Selecting the distribution $q \sim N(\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})})$ 
+
+where
+
+$$
+\begin{array}{l}
+q(\boldsymbol{\beta};\boldsymbol{\mu}_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}) \\
+\quad=(2\pi)^{-p/2}|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}|^{-1/2}\exp\left\{-\frac{1}{2}(\boldsymbol{\beta}-\boldsymbol{\mu}_{q(\boldsymbol{\beta})})^T \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^{-1} (\boldsymbol{\beta}-\boldsymbol{\mu}_{q(\boldsymbol{\beta})})\right\}
+\end{array}
+$$
+Then the lower bound used to minimize the K-L divergence is
+
+$$
+\begin{aligned}
+\log \underline{p} &\left(\mathbf{y} ; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
+&= \mathbf{y}^{T} \mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\mathbf{1}_{n}^{T} \exp \left\{\mathbf{X} \boldsymbol{\mu}_{q(\boldsymbol{\beta})}+\frac{1}{2} \operatorname{diagonal}\left(\mathbf{X} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})} \mathbf{X}^{T}\right)\right\} \\
+&-\frac{1}{2}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)^{T} \boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1}\left(\boldsymbol{\mu}_{q(\boldsymbol{\beta})}-\boldsymbol{\mu}_{\boldsymbol{\beta}}\right)-\frac{1}{2} \operatorname{tr}\left(\boldsymbol{\Sigma}_{\boldsymbol{\beta}}^{-1} \boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right) \\
+&+\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}\right|-\frac{1}{2} \log \left|\boldsymbol{\Sigma}_{\boldsymbol{\beta}}\right|+\frac{k+1}{2} -\mathbf{1}_{n}^{T} \log (\mathbf{y} !)
+\end{aligned}
+$$
+
+From earlier discussions it is guaranteed that 
+
+$$
+\log p(\boldsymbol{y}) \geq \log \underline{p}(\boldsymbol{y}; \boldsymbol{\mu}_{q(\boldsymbol{\beta})}, \boldsymbol{\Sigma}_{q(\boldsymbol{\beta)}})
+$$
+where the optimal variational parameters can be found through maximizing the above inequality using the Newton-Raphson iteration. The obtained parameters will minimze the K-L divergence and provide the optimal Gaussian density transform $q*$ as  $N(\boldsymbol{\mu}^*_{q(\boldsymbol{\beta})},\boldsymbol{\Sigma}_{q(\boldsymbol{\beta})}^*)$. 
 
 # Tangent Transform Approach 
 
+The Authors point out that not all variational approximations fit into the Kullback-Leibler Divergence framework. For these use case a Tanget transfrom approach is used, this utilizes *tangent-type* representations of concave/convex functions. The overall approach is underpinned by theory of convex duality, which is not elaborated on in the paper. An example representation is given by
+
+$$
+\log (x)=\min _{\xi>0}\{\xi x-\log (\xi)-1\}, \quad \text { for all } x>0
+$$
+
+The representation implies
+$$\log(x) \leq \xi x - \log(\xi)-1, \quad \text{ for all } \xi > 0$$
+
+The fact that the representation is linear in x for every value of $\xi > 0$ allows for simplification of expressions involving the log function. The following figure (taken from the article) reflects the this relationship as well. Notice how for a given $x$ value (right graph) on the logarithmic curve the tangential point on the tangential line corresponds to a specific minima on the left graph for different values of $\xi$. The following example shows how to utilize this type of approach. 
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('Figure7.png')
+```
+
 ## Tangent Transform Approach Example: Bayesian Logistic Regression
+
+The authors state that the Bayesian Logistic Regression lends itself to the Tangent Transform, but does not got into detail about why. One can ascertain from the derived equations it is due to the form of the posterior density containing terms similar to the tangent type form specified earlier. Given the Bayesian Logistic Regression Model
+
+$$
+Y_i|\beta_0,...,\beta_k \stackrel{\text { ind. }}{\sim} \text{Bernoulli}\left([1+\exp\left\{-(\beta_0+\beta_1x_{1i}+...+\beta_kx_{ki}\right\}]^{-1}\right)
+$$
+with priors on the coefficient vector of $\boldsymbol{\beta} \sim N(\boldsymbol{\mu_\beta},\boldsymbol{\Sigma_\beta})$ 
+
+The posterior density of $\boldsymbol{\beta}$ is
+
+$$
+\left. p(\boldsymbol{\beta}\mid\boldsymbol{y})=p(\boldsymbol{y},\boldsymbol{\beta}) \middle/ \int_ {\mathbb{R}^{k+1}}p(\boldsymbol{y},\boldsymbol{\beta})d\boldsymbol{\beta} \right.
+$$
+
+where the denominator contains an intractable integral and $p(\boldsymbol{y},\boldsymbol{\beta})$ is
+$$
+\begin{array}{l}
+p(\boldsymbol{y},\boldsymbol{\beta}) = \exp\left[\boldsymbol{y}^T\boldsymbol{X\beta} -\boldsymbol{1}_n^T \log\left\{\boldsymbol{1}_n+\exp(\boldsymbol{X\beta})\right\} \right.
+\\ \quad\quad\left. -\frac{1}{2}(\boldsymbol{\beta}-\boldsymbol{\mu_\beta})^T \boldsymbol{\Sigma_\beta}^{-1} (\boldsymbol{\beta}-\boldsymbol{\mu_\beta})
+-\frac{k+1}{2}\log(2\pi)-\frac{1}{2}\log|\boldsymbol{\Sigma_\beta}|\right]
+\end{array}
+$$
+
+Note in the exponential term there is a term that can be used for the tangential transform, shown below for specificity. 
+
+$$
+log\boldsymbol{1}_n+\exp(\boldsymbol{X\beta})
+$$
+
+It can be shown that $-log(1+e^x)$ are the maxima of a family of parabolas given below. 
+
+$$
+-\log \left(1+e^{x}\right)=\max _{\xi \in \mathbb{R}}\left\{A(\xi) x^{2}-\frac{1}{2} x+C(\xi)\right\} \quad \text { for all } x \in \mathbb{R}
+$$
+Where $A(\xi) \text{ and } C(\xi)$ are functions of $\xi> 0$. 
+This equations is a *tangent-type* representation of a convex functions. From here the derivations do proceed similarly to the previous examples. The only additional step is an optimization of the $\xi$ parameter, which can also be done by the Newton-Raphson method. 
 
 # A Note on Frequentist Inference
 
+Many of the examples presented were of Bayesian Inference, reason being is that Frequentists problems do not have as much to gain from Variational Approximation. In the Bayesian realm as stated earlier there are many posterior densities that are intractable. However, the authors do provide an example for frequentist in the form of a Poisson Mixed Model for the curious reader. 
+
 # Conclusion
 
+Overall the article's goal is to increase the statistician's familiarity with variational approximations as they are mostly used in the field of Computer Science. One item of note is that there is brief to no mention of the actual accuracy of these approximations, however there are other sources cited for those that are interested. The authors also mention that the variational approximations have the potential to become a major player as new software is being released, and new methods are emerging continually. In conclusion the paper does a good job relating back to statistical methods and terminology that most would be familiar with.
