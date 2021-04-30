@@ -19,7 +19,7 @@ The name derives from the mathematical topic of variational calculus, which the 
 
 "Variational approximations is a body of deterministic techniques for making approximate inference for parameters in complex statistical models." (Ormerod and Wand, 2010) Often the problem involves Bayesian inference, and the goal is to approximate posterior densities. In fact, use cases outside of the Bayesian realm are rare. The technique is often applicable to the same types of problems as Markov Chain Monte Carlo (MCMC) but is much faster than MCMC and provides a richer class of methods than Laplace approximation. That said, its biggest con is that its accuracy is limited. In MCMC, one can often tune the accuracy of an approximation by simply increasing the sample size, but variational approximation does not work this way; the accuracy achieved cannot be improved without deriving a different algorithm.
 
-The authors' objective is to explain variational approximation in statistical terms, and they focus on two overarching approaches, the Density Transform and the Tangent Transform. We will follow the same structure in our review of the article, assessing whether the authors were successful in their aims.
+The authors' objective is to explain variational approximation in statistical terms, and they focus on two overarching approaches, the Density Transform and the Tangent Transform. We will follow the same structure in our review of the article, assessing whether the authors were successful in their aims. Note that all equations and figures are from the original article.
 
 
 # Density Transform Approach
@@ -47,7 +47,7 @@ $$
 is the lower bound on the marginal likelihood which will be maximized approximate $q(\boldsymbol{\theta})$. 
 
 
-## Product Density Transforms
+## Product Density Transform
 
 The authors first explore the first of the two Density Transform restrictions, the product restriction. This is the heart of their article. They devote four examples and more than half of the article's page count to the Product Density Transform. As a reminder, the product restriction on $q$ involves factorizing $q(\boldsymbol{\theta})$ into $\prod_{i=1}^M q_i(\boldsymbol{\theta}_i)$, for some partition $\{\boldsymbol{\theta}_1,\ldots,\boldsymbol{\theta}_M\}$ of $\boldsymbol{\theta}$. It can be shown that the optimal densities satisfy 
 $$
@@ -222,7 +222,7 @@ p\left(\sigma_{u 1}^{2}, \ldots, \sigma_{u r}^{2}, \sigma_{\varepsilon}^{2} \mid
 \end{array}
 $$
 
-Because this example has no closed-form solution, the authors test the algorithm on real world data.  They used a set of longitudinal orthodontic measurements from Pinheiro & Bates, 2000. They set up a random intercept model as follows:
+Because this example has no closed-form solution, the authors test the algorithm on real world data.  They used a data set consisting of longitudinal orthodontic measurements and set up a random intercept model as follows:
 $$
 \begin{array}{l}
 \text {distance }_{i j} \mid U_{i} \stackrel{\text { ind. }}{\sim} N\left(\beta_{0}+U_{i}+\beta_{1} \text { age }_{i j}+\beta_{2} \operatorname{male}_{i}, \sigma_{\varepsilon}^{2}\right), \\
