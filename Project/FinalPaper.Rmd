@@ -20,6 +20,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Density Transform Approach
 
+In general variational approximations derive a lower bound, and then iteratively approximate the parameters of a conditional function with guidance from measuring the distance between the approximations and the lower bound. The Density Transform Approach attempts to approximate the posterior densities, in a Bayesian context, by other densities in which a more tractable is found. There are two main approaches in selecting the approximating density the first is *Product Density Transform* and the second is *Parametric Density Transform*. Both of these transforms are guided by the Kullback-Leibler Divergence (Distance). 
+
 ## Kullback-Leibler Divergence
 
 ## Product Density Transforms
