@@ -1,0 +1,44 @@
+---
+title: "Variational Approximations"
+author: "Ricardo Cortez and Ben Graf"
+date: "4/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- do we want to include the other examples in the paper??
+  -- I say no 
+
+
+# Introduction
+  (feedback from presentation)
+  - what's the problem? 
+  - what are we approximating?
+
+# Density Transform Approach
+
+## Kullback-Leibler Divergence
+
+## Product Density Transforms
+
+### Connection with Gibbs Sampling
+
+### Product Data Transfer Example 1: Normal Random Sample
+
+### Product Data Transfer Example 2: Linear Mixed Model
+
+# Parametric Density Transform
+
+### Parametric Density Transform Example: Poisson Regression
+
+# Tangent Transform Approach 
+
+## Tangent Transform Approach Example: Bayesian Logistic Regression
+
+# A Note on Frequentist Inference
+
+# Conclusion
+
